@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: KUSignalLib
+Version: 0.0.1
+Summary: To provide advanced DSP, Communication, and Radar functionality
+Author: Luke Staudacher
+Project-URL: Homepage, https://github.com/KU-Telemetry-Lab/KUSignalLib
+Project-URL: Issues, https://github.com/KU-Telemetry-Lab/KUSignalLib/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 3 - Alpha
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+run python3 -m build to "compile" library

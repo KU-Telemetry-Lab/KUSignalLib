@@ -1,0 +1,23 @@
+[project]
+name = "KUSignalLib"
+version = "0.0.1"
+authors = [
+  { name="Luke Staudacher"},
+]
+description = "To provide advanced DSP, Communication, and Radar functionality"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+]
+
+[project.urls]
+Homepage = "https://github.com/KU-Telemetry-Lab/KUSignalLib"
+Issues = "https://github.com/KU-Telemetry-Lab/KUSignalLib/issues"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
