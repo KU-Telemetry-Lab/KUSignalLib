@@ -10,4 +10,5 @@ src/KUSignalLib.egg-info/top_level.txt
 src/KUSignalLib/DSP/__init__.py
 src/KUSignalLib/communications/__init__.py
 src/KUSignalLib/examples/__init__.py
+src/KUSignalLib/examples/examples.py
 src/KUSignalLib/radar/__init__.py
