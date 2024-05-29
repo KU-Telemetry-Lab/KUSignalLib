@@ -12,12 +12,18 @@ def IIRDirectForm2(b, a, x):
     # Initialize the delay lines
     n = len(b)
     m = len(a)
-    x = np.concatenate((np.zeros(n - 1), x))
+    maxLen = max(n, m)
+    denominator = a
+    denominator[1:] = -denominator[1:] #flip sign of denominator coefficients
+    denominator[0] = 0 #zero out curent p(0) value for multiply, will add this coeff. back in for new x[n] term
+    x = np.concatenate((np.zeros(maxLen - 1), x)) #zero pad x
     y = np.zeros(len(x))
-    delayLine = np.zeros(n)
+    delayLine = np.zeros(maxLen)
     delayLine[0] = x[0]
     for i in range(1, len(x)):
-        y[i] = np.dot(b, delayLine) - np.dot(a[1:], y[i - 1])
-        delayLine[1:] = delayLine[:-1]
-        delayLine[0] = x[i]
+        # y[i] = np.dot(b, delayLine) - np.dot(a[1:], y[i - 1])
+        y[i] = np.dot(b, delayLine) #df2 right side
+        tmp = np.dot(denominator, delayLine) #df2 left side
+        delayLine[1:] = delayLine[:-1] #shift delay line
+        delayLine[0] = x[i]*a[0] + tmp #new value is x[n] * a[0] + sum of left side
     return y
