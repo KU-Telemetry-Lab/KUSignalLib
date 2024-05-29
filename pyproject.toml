@@ -2,9 +2,9 @@
 name = "KUSignalLib"
 version = "0.0.1"
 authors = [
-  { name="Luke Staudacher"},
+  { name="Luke Staudacher William Powers"},
 ]
-description = "To provide advanced DSP, Communication, and Radar functionality"
+description = "To provide advanced DSP, Communication, and Radar python functionality"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
