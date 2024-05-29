@@ -13,14 +13,14 @@ def IIRDirectForm2(b, a, x):
     n = len(b)
     m = len(a)
     maxLen = max(n, m)
-    denominator = a
+    denominator = a.copy()
     denominator[1:] = -denominator[1:] #flip sign of denominator coefficients
     denominator[0] = 0 #zero out curent p(0) value for multiply, will add this coeff. back in for new x[n] term
-    x = np.concatenate((np.zeros(maxLen - 1), x)) #zero pad x
+    x = np.concatenate((x, np.zeros(maxLen - 1))) #zero pad x
     y = np.zeros(len(x))
     delayLine = np.zeros(maxLen)
     delayLine[0] = x[0]
-    for i in range((len(x)-(maxLen-1))):
+    for i in range(len(x)):
         y[i] = np.dot(b, delayLine) #df2 right side
         tmp = np.dot(denominator, delayLine) #df2 left side
         delayLine[1:] = delayLine[:-1] #shift delay line
