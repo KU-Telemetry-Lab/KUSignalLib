@@ -1,6 +1,7 @@
 run 
    ```bash
-   run python3 -m build
+   pip install build
+   python3 -m build
    ```
  to "compile" library; this is not published to pypl yet
 
