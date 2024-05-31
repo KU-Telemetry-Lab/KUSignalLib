@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from scipy import interpolate as intp
 
 def IIRDirectForm2(b, a, x):
@@ -34,7 +35,7 @@ def Interpolate(x, n, mode="linear"):
 
     :param x: Input signal.
     :param n: Upsampled factor (signal is already upsampled)
-    :param mode: Interpolation type -> "linear", "quadratic"
+    :param mode: Interpolation type. Modes = "linear", "quadratic"
     :return: Interpolated signal.
     """
     nonzero_indices = np.arange(0, len(x)*n, n) # Generate indices for upsampled signal
@@ -43,97 +44,36 @@ def Interpolate(x, n, mode="linear"):
     return interpolated_signal
 
 
-def Upsample(x, n, dim=1, interpolate=True, axis=0):
+def Upsample(x, L, interpolate=True):
     """
     Discrete signal upsample implementation.
 
-    :param x: Input signal.
-    :param n: Upsample factor.
-    :param dim: Dimension of input signal. Default is 1.
-    :param interpolate: Flag indicating whether to perform interpolation. Default is True.
-    :param axis: Axis of x that is upsampled. Default is 0.
-    :return: Upsampled signal.
+    :param x: List or Numpy array type. Input signal.
+    :param L: Int type. Upsample factor.
+    :param interpolate: Boolean type. Flag indicating whether to perform interpolation. True = interpolate. False = don't interpolate.
+    :return: Numpy array type. Upsampled signal.
     """
     x_upsampled = []  # Initialize a list to store the upsampled signal
-
-    if dim == 1:  # If the input signal is 1D
-        if interpolate:
-            x_upsampled = Interpolate(x, n, mode="linear")
-        else:
-            for i in range(len(x)):  # Iterate over each element in the input signal
-                x_upsampled += [x[i]] + list(np.zeros(n-1, dtype=type(x[0])))  # Add the current element and n zeros after each element
-        return x_upsampled
-
-    elif dim == 2:  # If the input signal is 2D
-        if axis == 0:  # If axis input is 0, interpolate over rows
-            if interpolate:
-                for i in range(len(x)):
-                    x_upsampled += [list(Interpolate(x[i], n, mode="linear"))]
-            else:
-                for i in range(len(x)):  # Iterate over each row in the input signal
-                    x_i_upsampled = []  # Initialize a list to store the upsampled row
-                    for j in range(len(x[i])):  # Iterate over each element in the current row
-                        x_i_upsampled += [x[i][j]] + list(np.zeros(n-1, dtype=type(x[i][0]))) # Add the current element and n zeros after each element
-                    x_upsampled.append(x_i_upsampled)  # Add the upsampled row to the upsampled signal
-            return x_upsampled
-
-        elif axis == 1:  # If axis input is 1, interpolate over columns
-            if interpolate:
-                pass
-            else:
-                for i in range(len(x)):
-                    for j in range(n-1):
-                        x_upsampled += [x[i]]
-                        for k in range(n-1):
-                            x_upsampled += [list(np.zeros(len(x[i]), dtype=type(x[i][0])))]
-            return x_upsampled
-
-        else:
-            raise ValueError("Invalid axis input.")  # Raise an error indicating invalid axis input
-    else:  # If the input dimension is not 1 or 2
-        raise ValueError("Invalid dimension input.")  # Raise an error indicating invalid dimension input
+    if interpolate:
+        x_upsampled = Interpolate(x, L, mode="linear")
+    else:
+        for i in range(len(x)):  # Iterate over each element in the input signal
+            x_upsampled += [x[i]] + list(np.zeros(L-1, dtype=type(x[0])))  # Add the current element and L zeros after each element
+    return x_upsampled
 
 
-def Downsample(x, n, dim=1, axis=0):
+def Downsample(x, L):
     """
     Discrete signal downsample implementation.
 
-    :param x: Input signal.
-    :param n: Downsampled factor.
-    :param dim: Dimension of input signal. Default is 1.
-    :param axis: Axis of x that is downsampled. Default is 0.
-    :return: Downsampled signal.
+    :param x: List or Numpy array type. Input signal.
+    :param L: Int type. Downsampled factor.
+    :return: Numpy array type. Downsampled signal.
     """
-
     x_downsampled = []  # Initialize an empty list to store the downsampled signal
-    
-    if dim == 1:  # If the dimension is 1D
-        if n > len(x):  # Check if the downsample rate is larger than the signal size
-            raise ValueError("Downsample rate larger than signal size.")
-        
-        # Loop over the signal, downsampling by skipping every n elements
-        for i in range(len(x) // n):
-            x_downsampled.append(x[i*n])
-        
-        return x_downsampled  # Return the downsampled signal
-    
-    elif dim == 2:  # If the dimension is 2D
-        if axis == 0:  # If downsampling over rows
-            # Loop over each row in the signal
-            for i in range(len(x)):
-                x_i_downsampled = []
-                # Downsampling each row by skipping every n elements
-                for j in range(len(x[i]) // n):
-                    x_i_downsampled.append(x[i][j*n])
-                # Append the downsamples row to the downsampled signal list
-                x_downsampled.append(x_i_downsampled)
-            return x_downsampled  # Return the downsampled signal
-        
-        elif axis == 1:  # If downsampling over columns
-            # Loop over the signal, downsampling by skipping every n rows
-            for i in range(0, len(x) // n, n):
-                x_downsampled.append(x[i])
-            return x_downsampled  # Return the downsampled signal
-        
-    else:  # If the input dimension is not 1 or 2
-        raise ValueError("Invalid dimension input.")
+    if L > len(x):  # Check if the downsample rate is larger than the signal size
+        raise ValueError("Downsample rate larger than signal size.")
+    # Loop over the signal, downsampling by skipping every L elements
+    for i in range(math.floor(len(x) // L)):
+        x_downsampled.append(x[i*L])
+    return x_downsampled  # Return the downsampled signal
