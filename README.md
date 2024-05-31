@@ -1,8 +1,9 @@
 run 
    ```bash
-   run python3 -m build
+   pip install build
+   python3 -m build
    ```
- to "compile" library this is not published to pypl yet
+ to "compile" library; this is not published to pypl yet
 
 in the mean time you need this repo tangent to the repo your working in i.e.
 
