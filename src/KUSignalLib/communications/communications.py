@@ -16,3 +16,6 @@ def bin_to_char(x):
         bin_chars.append(ascii_char)
 
     return ''.join(bin_chars)
+
+    # just a test
+    
