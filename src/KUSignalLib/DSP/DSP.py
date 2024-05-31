@@ -1,6 +1,6 @@
 import numpy as np
 
-def IIRDirectForm2(b, a, x):
+def DirectForm2(b, a, x):
     """
     Direct Form II IIR filter implementation.
     
