@@ -28,7 +28,6 @@ def IIRDirectForm2(b, a, x):
     y = np.zeros(len(x))
     delayLine = np.zeros(maxLen)
     for i in range(len(x)):
-        print("index: ", i, "delay Line: ", delayLine)
         y[i] = np.dot(b, delayLine) #df2 right side
         tmp = np.dot(denominator, delayLine) #df2 left side
         delayLine[1:] = delayLine[:-1] #shift delay line
