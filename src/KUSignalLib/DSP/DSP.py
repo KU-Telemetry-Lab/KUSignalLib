@@ -34,7 +34,7 @@ def DirectForm2(b, a, x):
         tmp = np.dot(denominator, delayLine) #df2 left side
         delayLine[1:] = delayLine[:-1] #shift delay line
         delayLine[0] = x[i]*a[0] + tmp #new value is x[n] * a[0] + sum of left side
-    return y
+    return y[1:]
 
 def Interpolate(x, n, mode="linear"):
     """
