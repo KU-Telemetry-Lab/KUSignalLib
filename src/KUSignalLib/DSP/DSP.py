@@ -50,7 +50,6 @@ def Interpolate(x, n, mode="linear"):
     interpolated_signal = interpolation_function(np.arange(len(x)*n)) # interpolate the signal
     return interpolated_signal
 
-
 def Upsample(x, L, interpolate=True):
     """
     Discrete signal upsample implementation.
@@ -68,7 +67,6 @@ def Upsample(x, L, interpolate=True):
             x_upsampled += [x[i]] + list(np.zeros(L-1, dtype=type(x[0])))  # Add the current element and L zeros after each element
     return x_upsampled
 
-
 def Downsample(x, L):
     """
     Discrete signal downsample implementation.
@@ -84,3 +82,18 @@ def Downsample(x, L):
     for i in range(math.floor(len(x) // L)):
         x_downsampled.append(x[i*L])
     return x_downsampled  # Return the downsampled signal
+
+def phaseDetector(sample1, sample2, Kp):
+    """
+    Phase detector implementation.
+
+    :param sample1: Complex number. First point.
+    :param sample2: Complex number. Second point.
+    :param Kp: Float type. Proportional gain, should be less than one.
+    :return: Float type. Phase difference between the two points.
+    """
+    return (np.angle(sample2) - np.angle(sample1))*Kp
+
+def DDS(v, f_c, f_old, fs):
+    pass
+    
