@@ -20,7 +20,7 @@ def bin_to_char(x):
 
     return ''.join(bin_chars)
 
-def nearest_Neightbor(x, constilation=bpsk):
+def nearest_neighbor(x, constilation=bpsk):
     """
     Find the nearest neighbor in a given constellation.
 
