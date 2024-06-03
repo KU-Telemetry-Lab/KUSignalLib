@@ -1,3 +1,6 @@
+import numpy as np
+bpsk = [[complex(1+0j), 0b1], [complex(-1+0j), 0b0]]
+
 def bin_to_char(x):
     """
     Converts a binary array into 7 bit ascii equivalents.
@@ -17,5 +20,22 @@ def bin_to_char(x):
 
     return ''.join(bin_chars)
 
-    # just a test
-    
+def nearest_neighbor(x, constellation=bpsk):
+    """
+    Find the nearest neighbor in a given constellation.
+
+    :param x: Complex number. Point to find the nearest neighbor for.
+    :param constellation: 2d numpy array type containing point-value pairs. List of complex numbers representing the constellation point and its binary value default is bpsk.
+    :return: Complex number. Nearest neighbor in the constellation.
+    """
+    output = []
+    for input in x:
+        smallest_distance = float('inf')
+        binary_value = None
+        for point in constellation:
+            distance = np.abs(input - point[0])
+            if distance < smallest_distance:
+                smallest_distance = distance
+                binary_value = point[1]
+        output.append(binary_value)
+    return output
