@@ -53,7 +53,6 @@ class PLL():
         LFK2 = K2*phaseError + self.LFK2prev
         output = K1*phaseError + LFK2
         self.LFK2prev = LFK2
-        print("phaseError*k1: ", phaseError*K2, "LFK2: ", LFK2)
         return output
         
     def DDS(self, n, v, k0 = None, w0 = None):
