@@ -50,16 +50,17 @@ def Interpolate(x, n, mode="linear"):
     interpolated_signal = interpolation_function(np.arange(len(x)*n)) # interpolate the signal
     return interpolated_signal
 
-def Upsample(x, L, interpolate=True):
+def Upsample(x, L, offset=0, interpolate=True):
     """
     Discrete signal upsample implementation.
 
     :param x: List or Numpy array type. Input signal.
     :param L: Int type. Upsample factor.
+    :param offset: Int type. Offset size for input array.
     :param interpolate: Boolean type. Flag indicating whether to perform interpolation. True = interpolate. False = don't interpolate.
     :return: Numpy array type. Upsampled signal.
     """
-    x_upsampled = []  # Initialize a list to store the upsampled signal
+    x_upsampled = [0 for i in range(offset)]  # Initialize a list to store the upsampled signal (add offset if needed)
     if interpolate:
         x_upsampled = Interpolate(x, L, mode="linear")
     else:
@@ -67,15 +68,16 @@ def Upsample(x, L, interpolate=True):
             x_upsampled += [x[i]] + list(np.zeros(L-1, dtype=type(x[0])))  # Add the current element and L zeros after each element
     return x_upsampled
 
-def Downsample(x, L):
+def Downsample(x, L, offset=0):
     """
     Discrete signal downsample implementation.
 
     :param x: List or Numpy array type. Input signal.
     :param L: Int type. Downsampled factor.
+    :param offset: Int type. Offset size for input array.
     :return: Numpy array type. Downsampled signal.
     """
-    x_downsampled = []  # Initialize an empty list to store the downsampled signal
+    x_downsampled = [0 for i in range(offset)]  # Initialize an empty list to store the downsampled signal (add offset if needed)
     if L > len(x):  # Check if the downsample rate is larger than the signal size
         raise ValueError("Downsample rate larger than signal size.")
     # Loop over the signal, downsampling by skipping every L elements
