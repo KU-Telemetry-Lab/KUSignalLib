@@ -1,3 +1,5 @@
+import math
+import matplotlib.axes
 import numpy as np
 bpsk = [[complex(1+0j), 0b1], [complex(-1+0j), 0b0]]
 
@@ -39,3 +41,58 @@ def nearest_neighbor(x, constellation=bpsk):
                 binary_value = point[1]
         output.append(binary_value)
     return output
+
+def rect(mag, length):
+    """
+    Generates a rectangular pulse.
+
+    :param mag: Magnitude of pulse.
+    :param length: Length of pulse.
+    :return: List. Rectangular pulse.
+    """
+    return [mag for _ in range(length)]
+
+def half_sine(mag, length):
+    """
+    Generates a HS pulse.
+
+    :param mag: Magnitude of pulse.
+    :param length: Length of pulse.
+    :return: List. Half sine pulse.
+    """
+    inc = math.pi/(length-1)
+    temp = []
+    for i in range(length):
+        temp.append(math.sin(i*inc)*mag)
+    return temp
+
+def srrc(mag, alpha, b, length):
+    """
+    Generates a square root raised cosine pulse.
+
+    :param mag: Magnitude of pulse.
+    :param alpha: Roll-off factor.
+    :param b: Baseband bandwidth.
+    :param length: Length of pulse.
+    :return: List. Square root raised cosine pulse.
+    """
+    data = []
+    for i in range(length):
+        t = i - length/2 + 0.5
+        if t == 0:
+            data.append(mag)
+            continue
+        if 1-16*pow(alpha, 2)*pow(b, 2)*pow(t, 2) == 0:
+            data.append(0)
+            continue
+        data.append(mag*(math.sin(2*math.pi*b*t)*math.cos(2*math.pi*alpha*b*t))/(2*math.pi*b*t*(1-16*pow(alpha, 2)*pow(b, 2)*pow(t, 2))))
+    return data
+
+if __name__ == "__main__":
+
+    data = srrc(50, 0.2, 0.025, 255)
+
+    from matplotlib import pyplot as plt
+    _, ax = plt.subplots()
+    ax.stairs(data)
+    plt.show()
