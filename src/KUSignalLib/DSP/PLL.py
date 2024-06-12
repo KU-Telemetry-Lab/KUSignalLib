@@ -1,4 +1,3 @@
-import numpy as np
 
 class PLL():
     LFK2prev = 0
