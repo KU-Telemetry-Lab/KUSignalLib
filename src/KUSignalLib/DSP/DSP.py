@@ -96,6 +96,4 @@ def phaseDetector(sample1, sample2, Kp):
     """
     return (np.angle(sample2) - np.angle(sample1))*Kp
 
-def DDS(v, f_c, f_old, fs):
-    pass
     
