@@ -87,12 +87,3 @@ def srrc(mag, alpha, b, length):
             continue
         data.append(mag*(math.sin(2*math.pi*b*t)*math.cos(2*math.pi*alpha*b*t))/(2*math.pi*b*t*(1-16*pow(alpha, 2)*pow(b, 2)*pow(t, 2))))
     return data
-
-if __name__ == "__main__":
-
-    data = srrc(50, 0.2, 0.025, 255)
-
-    from matplotlib import pyplot as plt
-    _, ax = plt.subplots()
-    ax.stairs(data)
-    plt.show()
