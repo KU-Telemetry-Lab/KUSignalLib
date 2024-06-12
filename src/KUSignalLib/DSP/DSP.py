@@ -2,6 +2,7 @@ import numpy as np
 import math
 from scipy import interpolate as intp
 
+
 def DirectForm2(b, a, x):
     """
     Direct Form II IIR filter implementation.
@@ -36,6 +37,7 @@ def DirectForm2(b, a, x):
         delayLine[0] = x[i]*a[0] + tmp #new value is x[n] * a[0] + sum of left side
     return y[1:]
 
+
 def Interpolate(x, n, mode="linear"):
     """
     Perform interpolation on an upsampled signal.
@@ -49,6 +51,7 @@ def Interpolate(x, n, mode="linear"):
     interpolation_function = intp.interp1d(nonzero_indices, np.array(x), kind=mode, fill_value='extrapolate') # create interpolation function
     interpolated_signal = interpolation_function(np.arange(len(x)*n)) # interpolate the signal
     return interpolated_signal
+
 
 def Upsample(x, L, offset=0, interpolate=True):
     """
@@ -68,6 +71,7 @@ def Upsample(x, L, offset=0, interpolate=True):
             x_upsampled += [x[i]] + list(np.zeros(L-1, dtype=type(x[0])))  # Add the current element and L zeros after each element
     return x_upsampled
 
+
 def Downsample(x, L, offset=0):
     """
     Discrete signal downsample implementation.
@@ -86,76 +90,139 @@ def Downsample(x, L, offset=0):
     return x_downsampled  # Return the downsampled signal
 
 
-class PLL():
-    LFK2prev = 0
-    phase = 0
-    sigOut = 0
+def FIRLowPass(cutoff_frequency, window=None, **kwargs):
+    """
+    FIR low pass filter design.
 
-    def __init__(self, kp=1, k0 = 1, k1=0, k2=0, wstart = 1, fs = 1):
-        self.Kp = kp
-        self.K0 = k0
-        self.K1 = k1
-        self.K2 = k2
-        self.w0 = wstart
-        self.fs = fs
+    Generic design parameters.
 
-    def insertNewSample(self, lockingSignal, internalSignal, n):
-        """
-        insert a new sample of the received signal we are trying to lock to.
-        """
-        phaseError = self.phaseDetector(lockingSignal, internalSignal)
-        V_t = self.loopFilter(phaseError)
-        pointOut = self.DDS(n, V_t)
+    :param cutoff_frequency: Digital cutoff frequency.
+    :param window: Window used for filter truncation (see dictionary below).
 
-    def phaseDetector(self, sample1, sample2, Kp = None):
-        """
-        Phase detector implementation.
+    Detailed design parameters (optional).
 
-        :param sample1: Complex number. First point.
-        :param sample2: Complex number. Second point.
-        :param Kp: Float type. Proportional gain, should be less than one.
-        :return: Float type. Phase difference between the two points.
-        """
-        if Kp is None:
-            Kp = self.Kp
-        angel = np.angle(sample2) - np.angle(sample1)
-        if angel > np.pi:
-            angel -= 2*np.pi
-        elif angel < -np.pi:
-            angel += 2*np.pi
-        return angel*Kp
+    :param passband_cutoff: Passband digital frequency cutoff.
+    :param stopband_cutoff: Stopband digital frequency cutoff.
+    :param passband_attenuation: Passband attenuation level.
+    :param stopband_attenuation: Stopband attenuation level.
 
-    def loopFilter(self, phaseError, K1 = None, K2 = None):
-        """
-        Loop filter implementation.
-        :param phaseError: Float type. Phase error.
-        :param K1: Float type. Loop filter gain according to Fig C.2.6.
-        :param K2: Float type. Loop filter gain according to Fig C.2.6.
-        """
-        if K1 is None:
-            K1 = self.K1
-        if K2 is None:
-            K2 = self.K2
-        LFK2 = K2*phaseError + self.LFK2prev
-        output = K1*phaseError + LFK2
-        self.LFK2prev = LFK2
-        return output
-        
-    def DDS(self, n, v, k0 = None, w0 = None):
-        """
-        DDS implementation.
-        """
-        if k0 is None:
-            k0 = self.K0
-        # currentPhase = self.phase
-        # self.phase += v*k0
-        # arg = 2*np.pi*n*self.w0 + currentPhase
-        # self.sigOut = np.exp(1j*arg)
-        # return self.sigOut
-        self.phase += v*k0
-        arg = 2*np.pi*n*self.w0 + self.phase
-        self.sigOut = np.exp(1j*arg)
-        return self.sigOut
+    :return: Numpy array type. Coefficients (numerator) of digital lowpass filter.
+    """
+    window_lut = {
+            "rectangular": {"sidelobe amplitude": 10**(-13/10), "mainlobe width": 4*np.pi, "approximation error": 10**(-21/10)},
+            "bartlett": {"sidelobe amplitude": 10**(-25/10), "mainlobe width": 8*np.pi, "approximation error": 10**(-25/10)},
+            "hanning": {"sidelobe amplitude": 10**(-31/10), "mainlobe width": 8*np.pi, "approximation error": 10**(-44/10)},
+            "hamming": {"sidelobe amplitude": 10**(-41/10), "mainlobe width": 8*np.pi, "approximation error": 10**(-53/10)},
+            "blackman": {"sidelobe amplitude": 10**(-57/10), "mainlobe width": 12*np.pi, "approximation error": 10**(-74/10)}}
     
-    def getCurentPhase(self):
-        return self.phase
+    if 'passband_cutoff' in kwargs and 'stopband_cutoff' in kwargs:
+        wp = kwargs['passband_cutoff']
+        ws = kwargs['stopband_cutoff']
+        if 'passband_attenuation' in kwargs and 'stopband_attenuation' in kwargs:
+            kp = kwargs['passband_attenuation']
+            ks = kwargs['stopband_attenuation']
+        else: # using standard attenuation levels
+            kp = 10**(-3/10)
+            ks = 10**(-40/10)
+        try:
+            window_type = min((key for key, value in window_lut.items() if value["sidelobe amplitude"] < ks), key=lambda k: window_lut[k]["sidelobe amplitude"])
+        except ValueError:
+            window_type = "blackman"
+    else: # using standard transition width
+        wp = cutoff_frequency - (.125 * cutoff_frequency)
+        ws = cutoff_frequency + (.125 * cutoff_frequency)
+        kp = 10**(-3/10)
+        ks = 10**(-40/10)
+        if window == None:
+            window_type = min((key for key, value in window_lut.items() if value["sidelobe amplitude"] < ks), key=lambda k: window_lut[k]["sidelobe amplitude"])
+        else:
+            window_type=window
+    # calculating filter shifted and truncated filter parameters
+    N = math.ceil(window_lut[window_type]["mainlobe width"] / np.abs(ws - wp))
+    wc = (wp + ws) / 2
+    alpha = (N - 1) / 2
+
+    # determining delayed filter and window coefficients
+    h_dn = np.array([(np.sin(wc * (i - alpha))) / (np.pi * (i - alpha)) if i != alpha else wc / np.pi for i in range(N)])
+
+    if window_type == "rectangular":
+        w_n = np.array([1 for i in range(N)])
+    elif window_type == "bartlett":
+        w_n = np.array([(1 - (2 * np.abs(i - (N - 1) / 2)) / (N - 1)) for i in range(N)])
+    elif window_type == "hanning":
+        w_n = np.array([0.5 * (1 - np.cos((2 * np.pi * i) / (N - 1))) for i in range(N)])
+    elif window_type == "hamming":
+        w_n = np.array([0.54 - 0.46 * np.cos((2 * np.pi * i) / (N - 1)) for i in range(N)])
+    elif window_type == "blackman":
+        w_n = np.array([0.42 - 0.5 * np.cos((2 * np.pi * i) / (N - 1)) + 0.08 * np.cos((4 * np.pi * i) / (N - 1)) for i in range(N)])
+
+    return h_dn*w_n
+
+
+def FIRHighPass(cutoff_frequency, window=None, **kwargs):
+    """
+    FIR high pass filter design.
+
+    Generic design parameters.
+
+    :param cutoff_frequency: Digital cutoff frequency.
+    :param window: Window used for filter truncation (see dictionary below).
+
+    Detailed design parameters (optional).
+
+    :param stopband_cutoff: Stopband digital frequency cutoff.
+    :param passband_cutoff: Passband digital frequency cutoff.
+    :param stopband_attenuation: Stopband attenuation level.
+    :param passband_attenuation: Passband attenuation level.
+
+    :return: Numpy array type. Coefficients (numerator) of digital highpass filter.
+    """
+    window_lut = {
+            "rectangular": {"sidelobe amplitude": 10**(-13/10), "mainlobe width": 4*np.pi, "approximation error": 10**(-21/10)},
+            "bartlett": {"sidelobe amplitude": 10**(-25/10), "mainlobe width": 8*np.pi, "approximation error": 10**(-25/10)},
+            "hanning": {"sidelobe amplitude": 10**(-31/10), "mainlobe width": 8*np.pi, "approximation error": 10**(-44/10)},
+            "hamming": {"sidelobe amplitude": 10**(-41/10), "mainlobe width": 8*np.pi, "approximation error": 10**(-53/10)},
+            "blackman": {"sidelobe amplitude": 10**(-57/10), "mainlobe width": 12*np.pi, "approximation error": 10**(-74/10)}}
+    
+    if 'stopband_cutoff' in kwargs and 'passband_cutoff' in kwargs:
+        ws = kwargs['stopband_cutoff']
+        wp = kwargs['passband_cutoff']
+        if 'stopband_attenuation' in kwargs and 'passband_attenuation' in kwargs:
+            ks = kwargs['stopband_attenuation']
+            kp = kwargs['passband_attenuation']
+        else: # using standard attenuation levels
+            ks = 10**(-40/10)
+            kp = 10**(-3/10)
+        try:
+            window_type = min((key for key, value in window_lut.items() if value["sidelobe amplitude"] < ks), key=lambda k: window_lut[k]["sidelobe amplitude"])
+        except ValueError:
+            window_type = "blackman"
+    else: # using standard transition width
+        ws = cutoff_frequency - (.125 * cutoff_frequency)
+        wp = cutoff_frequency + (.125 * cutoff_frequency)
+        ks = 10**(-40/10)
+        kp = 10**(-3/10)
+        if window == None:
+            window_type = min((key for key, value in window_lut.items() if value["sidelobe amplitude"] < ks), key=lambda k: window_lut[k]["sidelobe amplitude"])
+        else:
+            window_type=window
+    # calculating filter shifted and truncated filter parameters
+    N = math.ceil(window_lut[window_type]["mainlobe width"] / np.abs(ws - wp))
+    wc = (wp + ws) / 2
+    alpha = (N - 1) / 2
+
+    # determining delayed filter and window coefficients
+    h_dn = np.array([-(np.sin(wc * (i - alpha))) / (np.pi * (i - alpha)) if i != alpha else 1 - (wc / np.pi) for i in range(N)])
+
+    if window_type == "rectangular":
+        w_n = np.array([1 for i in range(N)])
+    elif window_type == "bartlett":
+        w_n = np.array([(1 - (2 * np.abs(i - (N - 1) / 2)) / (N - 1)) for i in range(N)])
+    elif window_type == "hanning":
+        w_n = np.array([0.5 * (1 - np.cos((2 * np.pi * i) / (N - 1))) for i in range(N)])
+    elif window_type == "hamming":
+        w_n = np.array([0.54 - 0.46 * np.cos((2 * np.pi * i) / (N - 1)) for i in range(N)])
+    elif window_type == "blackman":
+        w_n = np.array([0.42 - 0.5 * np.cos((2 * np.pi * i) / (N - 1)) + 0.08 * np.cos((4 * np.pi * i) / (N - 1)) for i in range(N)])
+
+    return h_dn*w_n
