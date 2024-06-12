@@ -97,10 +97,10 @@ def phaseDetector(sample1, sample2, Kp):
     """
     return (np.angle(sample2) - np.angle(sample1))*Kp
 
+
 def dFreqShiftModualation(input, f_c, f_s):
     output = []
     for i in range(len(input)):
         output.append(input[i] * np.exp(1j*2*np.pi*f_c*i/f_s))
     return output
-
     
