@@ -106,20 +106,4 @@ def dFreqShiftModualation(input, f_c, f_s):
         output.append(input[i] * np.exp(1j*2*np.pi*f_c*i/f_s))
     return output
 
-# def lowPassFilter(input, f_cuttoff, fs, window_size = 21, window_type = 'hamming'):
-#     # try:
-#     w_c = f_cuttoff/fs
-#     if window_type == 'hamming':
-#         window = np.hamming(window_size)
-#     filter = sig.firwin(window_size, w_c, window=window)
-#     # for i in range(window.size):
-#     #     func = np.sin(w_c*np.pi*(i - window_size/2))/(np.pi*(i - window_size/2))
-#     #     filter.append(func*window[i])
-#     print(filter)
-    
-#     # except:
-#     #     raise ValueError("failed to make filter")
-#     output = np.convolve(input, filter, mode="same")
-#     print(output)
-#     return output
     
