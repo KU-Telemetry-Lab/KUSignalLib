@@ -1,6 +1,7 @@
 import numpy as np
 import math
-from scipy import interpolate as intp
+from scipy import interpolate as intp, signal as sig
+import matplotlib.pyplot as plt
 
 
 def DirectForm2(b, a, x):
@@ -321,4 +322,10 @@ def FIRBandPass(cutoff_frequency_one, cutoff_frequency_two, window=None, **kwarg
 
     return h_dn*w_n
 
+
+def dFreqShiftModualation(input, f_c, f_s):
+    output = []
+    for i in range(len(input)):
+        output.append(input[i] * np.exp(1j*2*np.pi*f_c*i/f_s))
+    return output
     
