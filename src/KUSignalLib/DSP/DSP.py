@@ -297,4 +297,3 @@ def FIRBandPass(cutoff_frequency_one, cutoff_frequency_two, window=None, **kwarg
     w_n = Window(N, window_type)
 
     return h_dn*w_n
-    
