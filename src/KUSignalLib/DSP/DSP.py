@@ -97,9 +97,6 @@ def phaseDetector(sample1, sample2, Kp):
     """
     return (np.angle(sample2) - np.angle(sample1))*Kp
 
-def DDS(v, f_c, f_old, fs):
-    pass
-
 def dFreqShiftModualation(input, f_c, f_s):
     output = []
     for i in range(len(input)):
