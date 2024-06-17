@@ -28,8 +28,8 @@ def DirectForm2(b, a, x):
     denominator[1:] = -denominator[1:] #flip sign of denominator coefficients
     denominator[0] = 0 #zero out curent p(0) value for multiply, will add this coeff. back in for new x[n] term
     x = np.concatenate((x, np.zeros(maxLen - 1))) #zero pad x
-    y = np.zeros(len(x))
-    delayLine = np.zeros(maxLen)
+    y = np.zeros(len(x), dtype=complex)
+    delayLine = np.zeros(maxLen, dtype=complex)
     for i in range(len(x)):
         y[i] = np.dot(b, delayLine) #df2 right side
         tmp = np.dot(denominator, delayLine) #df2 left side

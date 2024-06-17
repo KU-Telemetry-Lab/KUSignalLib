@@ -1,6 +1,7 @@
 import math
 import matplotlib.axes
 import numpy as np
+import sys
 bpsk = [[complex(1+0j), 0b1], [complex(-1+0j), 0b0]]
 
 def bin_to_char(x):
@@ -87,3 +88,25 @@ def srrc(mag, alpha, b, length):
             continue
         data.append(mag*(math.sin(2*math.pi*b*t)*math.cos(2*math.pi*alpha*b*t))/(2*math.pi*b*t*(1-16*pow(alpha, 2)*pow(b, 2)*pow(t, 2))))
     return data
+
+def srrc2(alpha, N, length):
+    """
+    Generates a square root raised cosine pulse.
+
+    :param alpha: Roll-off or excess factor.
+    :param N: Number of symbols per symbol.
+    :param length: Length of pulse. should be k*N+1 where k is an integer.
+    :return: List. Square root raised cosine pulse.
+    """
+    pulse = []
+    for n in range(length):
+        n = n - np.floor(length/2)
+        if n == 0: # evaluate at limit
+            n=sys.float_info.min
+        if alpha !=0:# evaluate at limit
+            if ((n == N/(4*alpha) or n == -N/(4*alpha))):
+                n = n + 0.1e-12
+        num = np.sin(np.pi*((1-alpha)*n/N)) + (4*alpha*n/N)*np.cos(np.pi*((1+alpha)*n/N))
+        den = (np.pi*n/N)*(1-(4*alpha*n/N)**2)*np.sqrt(N)
+        pulse.append(num/den)
+    return pulse
