@@ -1,6 +1,7 @@
 import math
 import matplotlib.axes
 import numpy as np
+import sys
 bpsk = [[complex(1+0j), 0b1], [complex(-1+0j), 0b0]]
 
 def bin_to_char(x):
@@ -88,24 +89,24 @@ def srrc(mag, alpha, b, length):
         data.append(mag*(math.sin(2*math.pi*b*t)*math.cos(2*math.pi*alpha*b*t))/(2*math.pi*b*t*(1-16*pow(alpha, 2)*pow(b, 2)*pow(t, 2))))
     return data
 
-def srrc2(Tsym, alpha, fs, length):
+def srrc2(alpha, N, length):
     """
     Generates a square root raised cosine pulse.
 
-    :param Tsym: Symbol time.
-    :param alpha: Roll-off factor.
-    :param fs: Sampling frequency.
-    :param length: Length of pulse.
+    :param alpha: Roll-off or excess factor.
+    :param N: Number of symbols per symbol.
+    :param length: Length of pulse. should be k*N+1 where k is an integer.
     :return: List. Square root raised cosine pulse.
     """
-    data = []
-    for i in range(length):
-        t = i - length/2 + 0.5
-        if t == 0:
-            data.append(1)
-            continue
-        if 1-16*pow(alpha, 2)*pow(Tsym, 2)*pow(t, 2) == 0:
-            data.append(0)
-            continue
-        data.append((math.sin(math.pi*t/Tsym)*(1-alpha+4*alpha/math.pi)*Tsym)/(math.pi*t*(1-pow(4*alpha*t/Tsym, 2))))
-    return data
+    pulse = []
+    for n in range(length):
+        n = n - np.floor(length/2)
+        if n == 0: # evaluate at limit
+            n=sys.float_info.min
+        if alpha !=0:# evaluate at limit
+            if ((n == N/(4*alpha) or n == -N/(4*alpha))):
+                n = n + 0.1e-12
+        num = np.sin(np.pi*((1-alpha)*n/N)) + (4*alpha*n/N)*np.cos(np.pi*((1+alpha)*n/N))
+        den = (np.pi*n/N)*(1-(4*alpha*n/N)**2)*np.sqrt(N)
+        pulse.append(num/den)
+    return pulse
