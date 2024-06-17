@@ -87,3 +87,25 @@ def srrc(mag, alpha, b, length):
             continue
         data.append(mag*(math.sin(2*math.pi*b*t)*math.cos(2*math.pi*alpha*b*t))/(2*math.pi*b*t*(1-16*pow(alpha, 2)*pow(b, 2)*pow(t, 2))))
     return data
+
+def srrc2(Tsym, alpha, fs, length):
+    """
+    Generates a square root raised cosine pulse.
+
+    :param Tsym: Symbol time.
+    :param alpha: Roll-off factor.
+    :param fs: Sampling frequency.
+    :param length: Length of pulse.
+    :return: List. Square root raised cosine pulse.
+    """
+    data = []
+    for i in range(length):
+        t = i - length/2 + 0.5
+        if t == 0:
+            data.append(1)
+            continue
+        if 1-16*pow(alpha, 2)*pow(Tsym, 2)*pow(t, 2) == 0:
+            data.append(0)
+            continue
+        data.append((math.sin(math.pi*t/Tsym)*(1-alpha+4*alpha/math.pi)*Tsym)/(math.pi*t*(1-pow(4*alpha*t/Tsym, 2))))
+    return data
