@@ -62,29 +62,32 @@ def upsample(x, L, offset=0, interpolate=True):
     :param interpolate: Boolean type. Flag indicating whether to perform interpolation.
     :return: Numpy array type. Upsampled signal.
     """
-    x_upsampled = [0 for i in range(offset)]
+    x_upsampled = [0] * offset  # Initialize with offset zeros
     if interpolate:
-        x_upsampled = interpolate(x, L, mode="linear")
+        # Assuming you have a function interpolate defined elsewhere
+        x_upsampled.extend(interpolate(x, L, mode="linear"))
     else:
-        for i in enumerate(x):
-            x_upsampled += [x[i]] + list(np.zeros(L-1, dtype=type(x[0])))
-    return x_upsampled
+        for i, sample in enumerate(x):
+            x_upsampled.append(sample)
+            x_upsampled.extend([0] * (L - 1))
+    return np.array(x_upsampled)
 
 def downsample(x, l, offset=0):
     """
     Discrete signal downsample implementation.
 
     :param x: List or Numpy array type. Input signal.
-    :param L: Int type. Downsampled factor.
+    :param l: Int type. Downsample factor.
     :param offset: Int type. Offset size for input array.
     :return: Numpy array type. Downsampled signal.
     """
-    x_downsampled = [0 for i in range(offset)]
+    x_downsampled = [0] * offset  # Initialize with offset zeros
     if l > len(x):
         raise ValueError("Downsample rate larger than signal size.")
-    # Loop over the signal, downsampling by skipping every L elements
-    for i in range(math.floor(len(x) // l)):
-        x_downsampled.append(x[i*l])
+    # Loop over the signal, downsampling by skipping every l elements
+    for i in range(math.floor(len(x) / l)):
+        x_downsampled.append(x[i * l])
+    
     return x_downsampled
 
 def phase_difference(x, y):
