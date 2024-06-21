@@ -2,14 +2,13 @@ import math
 import matplotlib.axes
 import numpy as np
 import sys
-bpsk = [[complex(1+0j), 0b1], [complex(-1+0j), 0b0]]
 
 def bin_to_char(x):
     """
     Converts a binary array into 7 bit ascii equivalents.
 
     :param x: List or numpy array type. Input binary signal.
-    :return: String containting concatenated ascii characters.
+    :return: String containing concatenated ascii characters.
     """
     segmented_arrays = [x[i:i+7] for i in range(0, len(x), 7)]
 
@@ -23,39 +22,29 @@ def bin_to_char(x):
 
     return ''.join(bin_chars)
 
-def nearest_neighbor(x, constellation=bpsk):
+def nearest_neighbor(x, constellation):
     """
     Find the nearest neighbor in a given constellation.
 
-    :param x: Complex number. Point to find the nearest neighbor for.
-    :param constellation: 2d numpy array type containing point-value pairs. List of complex numbers representing the constellation point and its binary value default is bpsk.
-    :return: Complex number. Nearest neighbor in the constellation.
+    :param x: Complex number or array of complex numbers. Point(s) to find the nearest neighbor for.
+    :param constellation: 2D numpy array containing point-value pairs. List of complex numbers representing the constellation point and its binary value.
+    :return: List of binary values corresponding to the nearest neighbors in the constellation.
     """
     output = []
-    for input in x:
+    for input_value in x:
         smallest_distance = float('inf')
         binary_value = None
         for point in constellation:
-            distance = np.abs(input - point[0])
+            distance = np.abs(input_value - point[0])
             if distance < smallest_distance:
                 smallest_distance = distance
                 binary_value = point[1]
         output.append(binary_value)
     return output
 
-def rect(mag, length):
+def half_sine_pulse(mag, length):
     """
-    Generates a rectangular pulse.
-
-    :param mag: Magnitude of pulse.
-    :param length: Length of pulse.
-    :return: List. Rectangular pulse.
-    """
-    return [mag for _ in range(length)]
-
-def half_sine(mag, length):
-    """
-    Generates a HS pulse.
+    Generates a half sine pulse.
 
     :param mag: Magnitude of pulse.
     :param length: Length of pulse.
@@ -67,46 +56,72 @@ def half_sine(mag, length):
         temp.append(math.sin(i*inc)*mag)
     return temp
 
-def srrc(mag, alpha, b, length):
-    """
-    Generates a square root raised cosine pulse.
-
-    :param mag: Magnitude of pulse.
-    :param alpha: Roll-off factor.
-    :param b: Baseband bandwidth.
-    :param length: Length of pulse.
-    :return: List. Square root raised cosine pulse.
-    """
-    data = []
-    for i in range(length):
-        t = i - length/2 + 0.5
-        if t == 0:
-            data.append(mag)
-            continue
-        if 1-16*pow(alpha, 2)*pow(b, 2)*pow(t, 2) == 0:
-            data.append(0)
-            continue
-        data.append(mag*(math.sin(2*math.pi*b*t)*math.cos(2*math.pi*alpha*b*t))/(2*math.pi*b*t*(1-16*pow(alpha, 2)*pow(b, 2)*pow(t, 2))))
-    return data
-
-def srrc2(alpha, N, length):
+def srrc(alpha, m, length):
     """
     Generates a square root raised cosine pulse.
 
     :param alpha: Roll-off or excess factor.
-    :param N: Number of symbols per symbol.
-    :param length: Length of pulse. should be k*N+1 where k is an integer.
+    :param m: Number of symbols per symbol.
+    :param length: Length of pulse. Should be k*m+1 where k is an integer.
     :return: List. Square root raised cosine pulse.
     """
     pulse = []
     for n in range(length):
-        n = n - np.floor(length/2)
-        if n == 0: # evaluate at limit
-            n=sys.float_info.min
-        if alpha !=0:# evaluate at limit
-            if ((n == N/(4*alpha) or n == -N/(4*alpha))):
-                n = n + 0.1e-12
-        num = np.sin(np.pi*((1-alpha)*n/N)) + (4*alpha*n/N)*np.cos(np.pi*((1+alpha)*n/N))
-        den = (np.pi*n/N)*(1-(4*alpha*n/N)**2)*np.sqrt(N)
-        pulse.append(num/den)
+        n_prime = n - np.floor(length/2)
+        if n_prime == 0:
+            n_prime = sys.float_info.min  # Handle case when n_prime is zero
+        if alpha != 0:
+            if np.abs(n_prime) == m/(4*alpha):
+                n_prime += 0.1e-12
+        num = np.sin(np.pi*((1-alpha)*n_prime/m)) + (4*alpha*n_prime/m)*np.cos(np.pi*((1+alpha)*n_prime/m))
+        den = (np.pi*n_prime/m)*(1-(4*alpha*n_prime/m)**2)*np.sqrt(m)
+        if den == 0:
+            pulse.append(1.0)  # Handle division by zero case
+        else:
+            pulse.append(num/den)
     return pulse
+
+def modulate_by_exponential(x, f_c, f_s):
+    """
+    Modulates a signal by exponential carrier (cos(x) + jsin(x)).
+
+    :param x: List or numpy array. Input signal to modulate.
+    :param f_c: Float. Carrier frequency of the modulation.
+    :param f_s: Float. Sampling frequency of the input signal.
+    :return: List. Modulated signal.
+    """
+    y = []
+    for i, value in enumerate(x):
+        # Exponential modulation using complex exponential function
+        modulation_factor = np.exp(1j * 2 * np.pi * f_c * i / f_s)
+        y.append(value * modulation_factor)
+    return y
+
+
+def modulate_by_cos(x, f_c, f_s):
+    """
+    Modulates a signal by a cosine carrier.
+
+    :param x: List or numpy array. Input signal to modulate.
+    :param f_c: Float. Carrier frequency of the modulation.
+    :param f_s: Float. Sampling frequency of the input signal.
+    :return: List. Modulated signal.
+    """
+    y = []
+    for i in enumerate(x):
+        y.append(x[i] * np.cos(2*np.pi*f_c*i/f_s))
+    return y
+
+def modulate_by_sin(x, f_c, f_s):
+    """
+    Modulates a signal by a sine carrier.
+
+    :param x: List or numpy array. Input signal to modulate.
+    :param f_c: Float. Carrier frequency of the modulation.
+    :param f_s: Float. Sampling frequency of the input signal.
+    :return: List. Modulated signal.
+    """
+    y = []
+    for i in enumerate(x):
+        y.append(x[i] * np.sin(2*np.pi*f_c*i/f_s))
+    return y
