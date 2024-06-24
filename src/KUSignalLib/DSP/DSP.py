@@ -225,3 +225,19 @@ def fir_band_pass(fc1, fc2, window=None, fs1=None, fp1=None, fp2=None, fs2=None,
     h_dn = np.array([((np.sin(fc2 * (i - alpha))) / (np.pi * (i - alpha)) - (np.sin(fc1 * (i - alpha))) / (np.pi * (i - alpha))) if i != alpha else (fc2 / np.pi - fc1 / np.pi)  for i in range(n)]) # determining the filter coefficients
     w_n = apply_window(n, window_type)
     return h_dn*w_n
+
+def modulate_by_exponential(x, f_c, f_s):
+    """
+    Modulates a signal by exponential carrier (cos(x) + jsin(x)).
+
+    :param x: List or numpy array. Input signal to modulate.
+    :param f_c: Float. Carrier frequency of the modulation.
+    :param f_s: Float. Sampling frequency of the input signal.
+    :return: List. Modulated signal.
+    """
+    y = []
+    for i, value in enumerate(x):
+        # Exponential modulation using complex exponential function
+        modulation_factor = np.exp(1j * 2 * np.pi * f_c * i / f_s)
+        y.append(value * modulation_factor)
+    return y
