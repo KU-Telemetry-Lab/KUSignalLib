@@ -22,14 +22,17 @@ def bin_to_char(x):
 
     return ''.join(bin_chars)
 
-def nearest_neighbor(x, constellation):
+def nearest_neighbor(x, constellation = None):
     """
     Find the nearest neighbor in a given constellation.
 
     :param x: Complex number or array of complex numbers. Point(s) to find the nearest neighbor for.
-    :param constellation: 2D numpy array containing point-value pairs. List of complex numbers representing the constellation point and its binary value.
+    :param constellation: 2D numpy array containing point-value pairs. List of complex numbers 
+           representing the constellation point and its binary value. defaults to BPAM/BPSK
     :return: List of binary values corresponding to the nearest neighbors in the constellation.
     """
+    if constellation is None:
+        constellation =  [[complex(1+0j), 0b1], [complex(-1+0j), 0b0]]
     output = []
     for input_value in x:
         smallest_distance = float('inf')

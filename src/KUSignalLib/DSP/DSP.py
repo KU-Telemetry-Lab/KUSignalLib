@@ -81,7 +81,7 @@ def downsample(x, l, offset=0):
     :param offset: Int type. Offset size for input array.
     :return: Numpy array type. Downsampled signal.
     """
-    x_downsampled = [0] * offset  # Initialize with offset zeros
+    x_downsampled = [0+0j] * offset  # Initialize with offset zeros
     if l > len(x):
         raise ValueError("Downsample rate larger than signal size.")
     # Loop over the signal, downsampling by skipping every l elements
@@ -226,7 +226,7 @@ def fir_band_pass(fc1, fc2, window=None, fs1=None, fp1=None, fp2=None, fs2=None,
     w_n = apply_window(n, window_type)
     return h_dn*w_n
 
-def modulate_by_exponential(x, f_c, f_s):
+def modulate_by_exponential(x, f_c, f_s, phase=0):
     """
     Modulates a signal by exponential carrier (cos(x) + jsin(x)).
 
@@ -238,6 +238,17 @@ def modulate_by_exponential(x, f_c, f_s):
     y = []
     for i, value in enumerate(x):
         # Exponential modulation using complex exponential function
-        modulation_factor = np.exp(1j * 2 * np.pi * f_c * i / f_s)
+        modulation_factor = np.exp(-1j * 2 * np.pi * f_c * i / f_s + phase)
         y.append(value * modulation_factor)
     return y
+
+def plot_complex_points(data, referencePoints = None):
+    """
+    Plot complex points on a 2D plane.
+
+    :param data: List or numpy array. Complex points to plot.
+    """
+    plt.plot([point.real for point in data], [point.imag for point in data], 'ro')
+    if referencePoints is not None:
+        plt.plot([point.real for point in referencePoints], [point.imag for point in referencePoints], 'b+')
+    plt.show()
