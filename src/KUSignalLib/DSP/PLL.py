@@ -29,7 +29,7 @@ class PLL():
         self.sigOut = np.exp(1j * thetaStart)
         self.fs = fs
 
-    def InsertNewSample(self, incomingSignal, n, internalSignal=None):
+    def insert_new_sample(self, incomingSignal, n, internalSignal=None):
         """
         :param incomingSignal: Complex number. The current sample of the received signal.
         :param internalSignal: Complex number. The current signal your LO is at. Will use default from constructor if left blank.
@@ -38,12 +38,12 @@ class PLL():
         """
         if internalSignal is None:
             internalSignal = np.exp(1j * (2 * np.pi * (self.w0 / self.fs) * n + self.phase))
-        phaseError = self.PhaseDetector(internalSignal, incomingSignal)
-        V_t = self.LoopFilter(phaseError)
+        phaseError = self.phase_detector(internalSignal, incomingSignal)
+        V_t = self.loop_filter(phaseError)
         pointOut = self.DDS(n, V_t)
         return pointOut
 
-    def PhaseDetector(self, sample1, sample2, Kp=None):
+    def phase_detector(self, sample1, sample2, Kp=None):
         """
         Phase detector implementation.
 
@@ -61,7 +61,7 @@ class PLL():
             angle += 2 * np.pi
         return angle * Kp
 
-    def LoopFilter(self, phaseError, K1=None, K2=None):
+    def loop_filter(self, phaseError, K1=None, K2=None):
         """
         Loop filter implementation.
         :param phaseError: Float type. Phase error.
@@ -96,5 +96,5 @@ class PLL():
         self.sigOut = np.exp(1j * (2 * np.pi * (w0 / fs) * n + self.phase))
         return self.sigOut
     
-    def GetCurrentPhase(self):
+    def get_current_phase(self):
         return self.phase
