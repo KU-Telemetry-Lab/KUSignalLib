@@ -240,7 +240,7 @@ def modulate_by_exponential(x, f_c, f_s, phase=0):
         # Exponential modulation using complex exponential function
         modulation_factor = np.exp(-1j * 2 * np.pi * f_c * i / f_s + phase)
         y.append(value * modulation_factor)
-    return y
+    return np.array(y)
 
 def plot_complex_points(data, referencePoints = None):
     """
@@ -252,7 +252,6 @@ def plot_complex_points(data, referencePoints = None):
     if referencePoints is not None:
         plt.plot([point.real for point in referencePoints], [point.imag for point in referencePoints], 'b+')
     plt.show()
-    return np.array(y)
 
 def convolve(x, h, mode='full'):
     """
