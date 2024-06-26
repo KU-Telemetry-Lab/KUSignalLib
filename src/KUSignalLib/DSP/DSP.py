@@ -252,3 +252,26 @@ def plot_complex_points(data, referencePoints = None):
     if referencePoints is not None:
         plt.plot([point.real for point in referencePoints], [point.imag for point in referencePoints], 'b+')
     plt.show()
+    return np.array(y)
+
+def convolve(x, h, mode='full'):
+    """
+    Convolution between two sequences. Can return full or same lengths.
+
+    :param x: List or numpy array. Input sequence one.
+    :param h: List or numpy array. Input sequence two.
+    :param mode: String. Specifies return sequence length.
+    :return: Numpy array. Resulting convolution output.
+    """
+    N = len(x) + len(h) - 1
+    x_padded = np.pad(x, (0, N - len(x)), mode='constant')
+    h_padded = np.pad(h, (0, N - len(h)), mode='constant')
+    X = np.fft.fft(x_padded)
+    H = np.fft.fft(h_padded)
+    y = np.fft.ifft(X * H)
+
+    if mode == 'same':
+        start = (len(h) - 1) // 2
+        end = start + len(x)
+        y = y[start:end]
+    return y
