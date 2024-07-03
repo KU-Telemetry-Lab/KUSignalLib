@@ -88,7 +88,7 @@ def downsample(x, l, offset=0):
     for i in range(math.floor(len(x) / l)):
         x_downsampled.append(x[i * l])
     
-    return x_downsampled
+    return np.array(x_downsampled)
 
 def phase_difference(x, y):
     """

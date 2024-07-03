@@ -10,8 +10,10 @@ class PLL():
     phase = 0
     sigOut = 0
 
-    def __init__(self, kp=1, k0=1, k1=0, k2=0, wstart=1, thetaStart=0, fs=1):
+    def __init__(self, loop_bandwidth = None, damping_factor = None, kp=1, k0=1, k1=0, k2=0, wstart=1, thetaStart=0, fs=1):
         '''
+        :param loop_bandwidth: Float type. Loop bandwidth. if specified with damping factor, will compute loop filter gains.
+        :param dampingFactor: Float type. Damping factor. if specified with loop bandwidth, will compute loop filter gains.
         :param kp: Float type. Proportional gain.
         :param k0: Float type. DDS gain.
         :param k1: Float type. Loop filter gain feed-forward.
@@ -20,14 +22,33 @@ class PLL():
         :param fs: Float type. Sampling frequency.
         Initialize the PLL object for repeated use, if left blank the object will be initialized with default values.
         '''
-        self.Kp = kp
-        self.K0 = k0
-        self.K1 = k1
-        self.K2 = k2
+        if loop_bandwidth == None and damping_factor == None:
+            self.Kp = kp
+            self.K0 = k0
+            self.K1 = k1
+            self.K2 = k2
+        else:
+            self.compute_loop_constants(loop_bandwidth, damping_factor, 1/fs, k0)
         self.w0 = wstart
         self.phase = thetaStart
         self.sigOut = np.exp(1j * thetaStart)
         self.fs = fs
+        
+    def compute_loop_constants(self, loopBandwidth, dampingFactor, T, K0=1):
+        """
+        :param loopBandwidth: Float type. Loop bandwidth.
+        :param dampingFactor: Float type. Damping factor.
+        :param T: Float type. this can be your sampleling peiod(i.e. 1/fs), or in communication systems it
+        can be your symbol time / N (where N is bits sample per symbol) for a higher bandwidth design.
+        Compute the loop filter gains based on the loop bandwidth and damping factor.
+        """
+        theta_n = loopBandwidth*T/(dampingFactor + 1/(4*dampingFactor))
+        K0_Kp = (4*theta_n)/(1+2*dampingFactor*theta_n+theta_n**2)
+        self.K1 = dampingFactor
+        self.K2 = theta_n
+        self.K0 = K0
+        self.Kp = K0_Kp/K0
+
 
     def insert_new_sample(self, incomingSignal, n, internalSignal=None):
         """
@@ -43,7 +64,7 @@ class PLL():
         pointOut = self.DDS(n, V_t)
         return pointOut
 
-    def phase_detector(self, sample1, sample2, Kp=None):
+    def phase_detector(self, sample1, sample2, Kp=None): # for BPSK take sign of real and mult. my imag
         """
         Phase detector implementation.
 

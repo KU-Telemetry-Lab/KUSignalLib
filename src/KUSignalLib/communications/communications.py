@@ -83,3 +83,24 @@ def srrc(alpha, m, length):
         else:
             pulse.append(num/den)
     return pulse
+
+def bin_to_symbol(sequence, constellation = None):
+    """
+
+    :param sequence: List or numpy array type. Input binary signal must be an integer multiple of symbol size.
+    :param constellation: 2D numpy array containing point-value pairs. List of complex numbers
+    :
+    """
+    if constellation is None:
+        constellation = [[complex(1+0j), 0b1], [complex(-1+0j), 0b0]]
+    symbol_size = max([len(bin(sub_array[1])) for sub_array in constellation])-2
+    # print(symbol_size)
+    values = []
+    for i in range(int(len(sequence)/symbol_size)):
+        bin_array = sequence[i*symbol_size:(i+1)*symbol_size]
+        bin_string = ''.join(str(bit) for bit in bin_array)
+        decimal_value = int(bin_string, 2)
+        for point in constellation:
+            if point[1] == decimal_value:
+                values.append(point) 
+    return values
