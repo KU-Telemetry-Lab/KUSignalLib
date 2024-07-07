@@ -104,3 +104,29 @@ def bin_to_symbol(sequence, constellation = None):
             if point[1] == decimal_value:
                 values.append(point) 
     return values
+
+def differential_encoder(x):
+    """
+    Differential encoder.
+
+    :param x: List or numpy array type. Input binary signal.
+    :return: List. Differential encoded binary signal.
+    """
+    x.insert(0, 0)
+    output = [x[0]]
+    for i in range(1, len(x)):
+        output.append(x[i]^x[i-1])
+    return output
+
+def differential_decoder(x):
+    """
+    Differential encoder.
+
+    :param x: List or numpy array type. Input binary signal.
+    :return: List. Differential encoded binary signal.
+    """
+    output = [x[0]]
+    for i in range(1, len(x)):
+        output.append(x[i]^x[i-1])
+    return output
+
