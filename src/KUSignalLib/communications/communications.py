@@ -1,5 +1,5 @@
 import math
-import matplotlib.axes
+import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
@@ -104,3 +104,25 @@ def bin_to_symbol(sequence, constellation = None):
             if point[1] == decimal_value:
                 values.append(point) 
     return values
+
+def eye_diagram(signal, sample_rate):
+    """
+    Generates a eye diagram for a pulse shaped signal.
+
+    :param signal: List or numpy array type. Input puls shaped signal.
+    :param sample_rate: Int type. Sample rate of input signal.
+    """
+    signal_blocks = [signal[i:i + 2 * sample_rate] for i in range(0, len(signal) - 2 * sample_rate + 1, sample_rate)]
+    
+    plt.figure(figsize=(10, 6))
+    for block in signal_blocks:
+        plt.plot(np.arange(-sample_rate, sample_rate), block, alpha=0.5)
+ 
+    plt.axvline(x=-sample_rate/2, color='red', linestyle='--')
+    plt.axvline(x=0, color='red', linestyle='--')
+    plt.axvline(x=sample_rate/2, color='red', linestyle='--')
+    plt.title('Eye Diagram')
+    plt.xlabel('Samples')
+    plt.ylabel('Amplitude')
+    plt.xlim(-sample_rate, sample_rate)
+    plt.show()
