@@ -107,7 +107,7 @@ def bin_to_symbol(sequence, constellation = None):
 
 def differential_encoder(x):
     """
-    Differential encoder.
+    Differential encoder assumes 0 indicates change, designed for BPSK.
 
     :param x: List or numpy array type. Input binary signal.
     :return: List. Differential encoded binary signal.
@@ -115,18 +115,20 @@ def differential_encoder(x):
     x.insert(0, 0)
     output = [x[0]]
     for i in range(1, len(x)):
-        output.append(x[i]^x[i-1])
+        output.append(int(not(x[i]^output[i-1])))
+    output.remove(0)
     return output
 
 def differential_decoder(x):
     """
-    Differential encoder.
+    Differential encoder assumes 0 indicates change, designed for BPSK.
 
     :param x: List or numpy array type. Input binary signal.
     :return: List. Differential encoded binary signal.
     """
-    output = [x[0]]
-    for i in range(1, len(x)):
-        output.append(x[i]^x[i-1])
+    output = [1]
+    for i in range(0, len(x)):
+        output.append((x[i])^(not (x[i-1])))
+    output.remove(0)
     return output
 
