@@ -22,7 +22,7 @@ def bin_to_char(x):
 
     return ''.join(bin_chars)
 
-def nearest_neighbor(x, constellation = None):
+def nearest_neighbor(x, constellation = None, binary = True):
     """
     Find the nearest neighbor in a given constellation.
 
@@ -36,13 +36,16 @@ def nearest_neighbor(x, constellation = None):
     output = []
     for input_value in x:
         smallest_distance = float('inf')
-        binary_value = None
+        value = None
         for point in constellation:
             distance = np.abs(input_value - point[0])
             if distance < smallest_distance:
                 smallest_distance = distance
-                binary_value = point[1]
-        output.append(binary_value)
+                if binary:
+                    value = point[1]
+                else:
+                    value = point[0]
+        output.append(value)
     return output
 
 def half_sine_pulse(mag, length):

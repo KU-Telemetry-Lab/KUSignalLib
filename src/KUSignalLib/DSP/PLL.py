@@ -10,12 +10,12 @@ class PLL():
     phase = 0
     sigOut = 0
 
-    def __init__(self, loop_bandwidth = None, damping_factor = None, kp=1, k0=1, k1=0, k2=0, wstart=1, thetaStart=0, fs=1):
+    def __init__(self, loop_bandwidth = None, damping_factor = None, kp=1, k0=1, k1=0, k2=0, wstart=1, thetaStart=0, fs=1, sampsPerSym=1):
         '''
         :param loop_bandwidth: Float type. Loop bandwidth. if specified with damping factor, will compute loop filter gains.
         :param dampingFactor: Float type. Damping factor. if specified with loop bandwidth, will compute loop filter gains.
-        :param kp: Float type. Proportional gain.
-        :param k0: Float type. DDS gain.
+        :param kp: Float type. Proportional gain determind by system.
+        :param k0: Float type. DDS gain usualy 1 or -1.
         :param k1: Float type. Loop filter gain feed-forward.
         :param k2: Float type. Loop filter gain feed-back.
         :param wstart: Float type. Starting frequency that the received signal is supposed to be at.
@@ -28,13 +28,13 @@ class PLL():
             self.K1 = k1
             self.K2 = k2
         else:
-            self.compute_loop_constants(loop_bandwidth, damping_factor, 1/fs, k0)
+            self.compute_loop_constants(loop_bandwidth, damping_factor, 1/fs, sampsPerSym, k0, kp)
         self.w0 = wstart
         self.phase = thetaStart
         self.sigOut = np.exp(1j * thetaStart)
         self.fs = fs
         
-    def compute_loop_constants(self, loopBandwidth, dampingFactor, T, K0=1):
+    def compute_loop_constants(self, loopBandwidth, dampingFactor, T, sampsPerSym, k0, kp):
         """
         :param loopBandwidth: Float type. Loop bandwidth.
         :param dampingFactor: Float type. Damping factor.
@@ -42,12 +42,12 @@ class PLL():
         can be your symbol time / N (where N is bits sample per symbol) for a higher bandwidth design.
         Compute the loop filter gains based on the loop bandwidth and damping factor.
         """
-        theta_n = loopBandwidth*T/(dampingFactor + 1/(4*dampingFactor))
-        K0_Kp = (4*theta_n)/(1+2*dampingFactor*theta_n+theta_n**2)
-        self.K1 = dampingFactor
-        self.K2 = theta_n
-        self.K0 = K0
-        self.Kp = K0_Kp/K0
+        theta_n = (loopBandwidth*T/sampsPerSym)/(dampingFactor + 1/(4*dampingFactor))
+        factor = (-4*theta_n)/(1+2*dampingFactor*theta_n+theta_n**2)
+        self.K1 = dampingFactor * factor/kp
+        self.K2 = theta_n * factor/kp
+        self.K0 = k0
+        self.Kp = kp
 
 
     def insert_new_sample(self, incomingSignal, n, internalSignal=None):
