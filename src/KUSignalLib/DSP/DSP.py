@@ -42,14 +42,16 @@ def interpolate(x, n, mode="linear"):
     """
     Perform interpolation on an upsampled signal.
 
-    :param x: Input signal.
-    :param n: Upsampled factor (signal is already upsampled)
-    :param mode: Interpolation type. Modes = "linear", "quadratic"
+    :param x: Input signal (already upsampled with zeros).
+    :param n: Upsampled factor.
+    :param mode: Interpolation type. Modes = "linear", "quadratic".
     :return: Interpolated signal.
     """
-    nonzero_indices = np.arange(0, len(x)*n, n)
-    interpolation_function = intp.interp1d(nonzero_indices, np.array(x), kind=mode, fill_value='extrapolate')
-    interpolated_signal = interpolation_function(np.arange(len(x)*n))
+    nonzero_indices = np.arange(0, len(x), n)
+    nonzero_values = x[nonzero_indices]
+    interpolation_function = intp.interp1d(nonzero_indices, nonzero_values, kind=mode, fill_value='extrapolate')
+    new_indices = np.arange(len(x))
+    interpolated_signal = interpolation_function(new_indices)
     return interpolated_signal
 
 def upsample(x, L, offset=0, interpolate=True):
