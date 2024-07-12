@@ -22,7 +22,7 @@ def bin_to_char(x):
 
     return ''.join(bin_chars)
 
-def nearest_neighbor(x, constellation = None):
+def nearest_neighbor(x, constellation = None, binary = True):
     """
     Find the nearest neighbor in a given constellation.
 
@@ -36,13 +36,16 @@ def nearest_neighbor(x, constellation = None):
     output = []
     for input_value in x:
         smallest_distance = float('inf')
-        binary_value = None
+        value = None
         for point in constellation:
             distance = np.abs(input_value - point[0])
             if distance < smallest_distance:
                 smallest_distance = distance
-                binary_value = point[1]
-        output.append(binary_value)
+                if binary:
+                    value = point[1]
+                else:
+                    value = point[0]
+        output.append(value)
     return output
 
 def half_sine_pulse(mag, length):
@@ -104,3 +107,49 @@ def bin_to_symbol(sequence, constellation = None):
             if point[1] == decimal_value:
                 values.append(point) 
     return values
+
+def differential_encoder_bin(x):
+    """
+    Differential encoder assumes 0 indicates change, designed for BPSK.
+
+    :param x: List or numpy array type. Input binary signal.
+    :return: List. Differential encoded binary signal.
+    """
+    x.insert(0, 0)
+    output = [x[0]]
+    for i in range(1, len(x)):
+        output.append(int(not(x[i]^output[i-1])))
+    output.remove(0)
+    return output
+
+def differential_decoder_bin(x):
+    """
+    Differential encoder assumes 0 indicates change, designed for BPSK.
+
+    :param x: List or numpy array type. Input binary signal.
+    :return: List. Differential encoded binary signal.
+    """
+    output = [1]
+    for i in range(0, len(x)):
+        output.append((x[i])^(not (x[i-1])))
+    output.remove(0)
+    return output
+
+def differential_decoder(x, LUT, allowedError = np.pi/12):
+    """
+    Differential encoder assumes 0 indicates change, designed for BPSK.
+
+    :param x: List or numpy array type. Input signal.
+    :return: List. Differential encoded signal.
+    """
+    output = [0b10]
+    for i in range(1, len(x)):
+        phaseDiff = np.angle(x[i])-np.angle(x[i-1])
+        if phaseDiff > np.pi:
+            phaseDiff -= 2*np.pi
+        elif phaseDiff <= -np.pi:
+            phaseDiff += 2*np.pi
+        for j in LUT:
+            if abs(phaseDiff-j[0]) < allowedError:
+                output.append(j[1])
+    return output

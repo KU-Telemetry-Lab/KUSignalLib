@@ -276,3 +276,19 @@ def convolve(x, h, mode='full'):
         end = start + len(x)
         y = y[start:end]
     return y
+
+def cross_correlation(signal, sequence):
+    """
+    Cross-correlation between two signals.
+
+    :param signal: List or numpy array. Input signal.
+    :param sequence: List or numpy array. Input sequence should be the sequence 
+     your searching for, shold be shoter then signal.
+
+    :return: Numpy array. Cross-correlation output.
+    """
+    output = []
+    signal = np.pad(signal, (len(sequence), len(sequence)), 'constant', constant_values=(0, 0))
+    for i in range(len(signal)-len(sequence)-1):
+        output.append(np.dot(signal[i:i + len(sequence)], sequence))
+    return output
