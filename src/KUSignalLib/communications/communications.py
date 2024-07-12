@@ -108,7 +108,7 @@ def bin_to_symbol(sequence, constellation = None):
                 values.append(point) 
     return values
 
-def differential_encoder(x):
+def differential_encoder_bin(x):
     """
     Differential encoder assumes 0 indicates change, designed for BPSK.
 
@@ -122,7 +122,7 @@ def differential_encoder(x):
     output.remove(0)
     return output
 
-def differential_decoder(x):
+def differential_decoder_bin(x):
     """
     Differential encoder assumes 0 indicates change, designed for BPSK.
 
@@ -135,3 +135,21 @@ def differential_decoder(x):
     output.remove(0)
     return output
 
+def differential_decoder(x, LUT, allowedError = np.pi/12):
+    """
+    Differential encoder assumes 0 indicates change, designed for BPSK.
+
+    :param x: List or numpy array type. Input signal.
+    :return: List. Differential encoded signal.
+    """
+    output = [0b10]
+    for i in range(1, len(x)):
+        phaseDiff = np.angle(x[i])-np.angle(x[i-1])
+        if phaseDiff > np.pi:
+            phaseDiff -= 2*np.pi
+        elif phaseDiff <= -np.pi:
+            phaseDiff += 2*np.pi
+        for j in LUT:
+            if abs(phaseDiff-j[0]) < allowedError:
+                output.append(j[1])
+    return output
