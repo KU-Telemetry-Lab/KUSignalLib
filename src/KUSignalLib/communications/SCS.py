@@ -31,7 +31,7 @@ class SCS():
         self.adjusted_symbol_block = np.zeros(3, dtype=complex)
         self.timing_error_record = []
         self.loop_filter_record = []
-        self.counter = samples_per_symbol
+        self.counter = samples_per_symbol - 1
         
         self.scs_output_record = []
         
@@ -134,7 +134,7 @@ class SCS():
 
     def insert_new_sample(self, complex_early_sample, complex_on_time_sample, complex_late_sample):
         # sample by sample implementation
-        if self.counter == self.samples_per_symbol:
+        if self.counter == self.samples_per_symbol-1:
             symbol_block = np.array([complex_early_sample, complex_on_time_sample, complex_late_sample])
 
             timing_error = self.early_late_ted()
