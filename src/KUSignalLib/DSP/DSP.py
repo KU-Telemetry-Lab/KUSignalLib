@@ -54,7 +54,7 @@ def interpolate(x, n, mode="linear"):
     interpolated_signal = interpolation_function(new_indices)
     return interpolated_signal
 
-def upsample(x, L, offset=0, interpolate=True):
+def upsample(x, L, offset=0, interpolate_flag=True):
     """
     Discrete signal upsample implementation.
 
@@ -65,9 +65,8 @@ def upsample(x, L, offset=0, interpolate=True):
     :return: Numpy array type. Upsampled signal.
     """
     x_upsampled = [0] * offset  # Initialize with offset zeros
-    if interpolate:
-        # Assuming you have a function interpolate defined elsewhere
-        x_upsampled.extend(interpolate(x, L, mode="linear"))
+    if interpolate_flag:
+        x_upsampled.extend(interpolate(x, L))
     else:
         for i, sample in enumerate(x):
             x_upsampled.append(sample)

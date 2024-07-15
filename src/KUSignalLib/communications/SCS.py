@@ -1,26 +1,27 @@
 import numpy as np
 from scipy import interpolate as intp
+import matplotlib.pyplot as plt
 
-class SCS():
-    def __init__(self, samples_per_symbol, loop_bandwidth=None, damping_factor=None, k0=1, kp=1, k1=0, k2=0, upsample_rate=10):
+class SCS:
+    def __init__(self, samples_per_symbol, mode="early-late", loop_bandwidth=None, damping_factor=None, k0=1, kp=1, k1=0, k2=0, upsample_rate=10):
         '''
-        Initialize the SCS (Symbol Clock Syncrhonization) subsystem class.
+        Initialize the SCS (Symbol Clock Synchronization) subsystem class.
 
-        :param input_signal_complex: Complex numpy array type. Input clock skewed sampled complex signal.
         :param samples_per_symbol: Int type. Number of samples per symbol.
-        :param loop_bandwidth: Float type. Determines the lock on speed to the timing error (similar to PLL).
-        :param damping_factor: Float type. Determines the oscillation during lock on to the timing error (similar to PLL).
-        :param kp: Float type. TBD.
-        :param k0: Float type. TBD.
+        :param loop_bandwidth: Float type. Determines the lock-on speed to the timing error (similar to PLL).
+        :param damping_factor: Float type. Determines the oscillation during lock-on to the timing error (similar to PLL).
+        :param kp: Float type. Proportional gain.
+        :param k0: Float type. Loop gain.
         :param k1: Float type. Loop filter coefficient one.
         :param k2: Float type. Loop filter coefficient two.
         :param upsample_rate: Int type. Upsample rate of timing error correction interpolation.
         '''
         self.samples_per_symbol = samples_per_symbol
+        self.mode = mode
         self.upsample_rate = upsample_rate
 
         self.k2_prev = 0
-        if loop_bandwidth == None and damping_factor == None:
+        if loop_bandwidth is None and damping_factor is None:
             self.kp = kp
             self.k0 = k0
             self.k1 = k1
@@ -35,24 +36,23 @@ class SCS():
         
         self.scs_output_record = []
         
-    def compute_loop_constants(self, loop_bandwidth, damping_factor, k0, kp):
+    def compute_loop_constants(self, loop_bandwidth: float, damping_factor: float, k0: float, kp: float):
         """
         Compute the loop filter gains based on the loop bandwidth and damping factor.
 
         :param loop_bandwidth: Float type. Loop bandwidth of control loop.
         :param damping_factor: Float type. Damping factor of control loop.
-        :param samples_per_symbol: Int type. Nukber of samples per signal.
-        :param k0: Float type. TBD.
-        :param kp: Float type. TBD.
+        :param k0: Float type. Loop gain.
+        :param kp: Float type. Proportional gain.
         """
-        theta_n = (loop_bandwidth*(1/self.samples_per_symbol)/self.samples_per_symbol)/(damping_factor + 1/(4*damping_factor))
-        factor = (-4*theta_n)/(1+2*damping_factor*theta_n+theta_n**2)
-        self.k1 = damping_factor * factor/kp
-        self.k2 = theta_n * factor/kp
+        theta_n = (loop_bandwidth * (1 / self.samples_per_symbol) / self.samples_per_symbol) / (damping_factor + 1 / (4 * damping_factor))
+        factor = (-4 * theta_n) / (1 + 2 * damping_factor * theta_n + theta_n**2)
+        self.k1 = damping_factor * factor / kp
+        self.k2 = theta_n * factor / kp
         self.k0 = k0
         self.kp = kp
 
-    def get_timing_error_record(self):
+    def get_timing_error_record(self) -> list:
         """
         Get the recorded timing errors.
         
@@ -60,7 +60,7 @@ class SCS():
         """
         return self.timing_error_record
 
-    def get_loop_filter_record(self):
+    def get_loop_filter_record(self) -> list:
         """
         Get the recorded loop filter outputs.
         
@@ -68,43 +68,38 @@ class SCS():
         """
         return self.loop_filter_record
 
-    def get_scs_output_record(self):
+    def get_scs_output_record(self) -> list:
         """
         Get the recorded SCS outputs.
         
         :return: List type. Recorded SCS outputs.
         """
         return self.scs_output_record
-    
-    def interpolate(self, symbol_block_upsampled):
-        """
-        Perform interpolation on an upsampled signal.
 
-        :param input_signal: Numpy array type. Input signal (already upsampled with zeros).
-        :param upsample_rate: Int type. Upsample rate of interpolation.
-        :return: Numpy array type. Interpolated signal.
-        """
-        nonzero_indices = np.arange(0, len(symbol_block_upsampled), self.upsample_rate)
-        nonzero_values = symbol_block_upsampled[nonzero_indices]
-        interpolation_function = intp.interp1d(nonzero_indices, nonzero_values, kind="linear", fill_value='extrapolate')
-        new_indices = np.arange(len(symbol_block_upsampled))
-        interpolated_signal = interpolation_function(new_indices)
-        return interpolated_signal
-
-    def upsample(self, symbol_block, interpolate=True):
+    def interpolate(self, symbol_block, mode='cubic'):
         """
         Discrete signal upsample implementation.
 
         :param symbol_block: List or Numpy array type. Input signal.
+        :param mode: String type. Interpolation mode ('linear' or 'cubic').
         :return: Numpy array type. Upsampled signal.
         """
-        symbol_block_upsampled = np.zeros(len(symbol_block) * self.upsample_rate, dtype=complex)
-        for i, sample in enumerate(symbol_block):
-            symbol_block_upsampled[i * self.upsample_rate] = sample
-        if interpolate:
-            symbol_block_upsampled = self.interpolate(symbol_block_upsampled)
-        return symbol_block_upsampled
-
+        if mode == "linear":
+            symbol_block_upsampled = np.zeros(len(symbol_block) * self.upsample_rate, dtype=complex)
+            for i, sample in enumerate(symbol_block):
+                symbol_block_upsampled[i * self.upsample_rate] = sample
+            nonzero_indices = np.arange(0, len(symbol_block_upsampled), self.upsample_rate)
+            nonzero_values = symbol_block_upsampled[nonzero_indices]
+            new_indices = np.arange(len(symbol_block_upsampled))
+            interpolation_function = intp.interp1d(nonzero_indices, nonzero_values, kind="linear", fill_value='extrapolate')
+            symbol_block_interpolated = interpolation_function(new_indices)
+        elif mode == "cubic":
+            symbol_block = np.append(symbol_block, 0)
+            interpolation_function = intp.CubicSpline(np.arange(0, len(symbol_block)), symbol_block)
+            symbol_block_interpolated = interpolation_function(np.linspace(0, len(symbol_block)-1, num=(len(symbol_block)-1) * self.upsample_rate))
+        else:
+            symbol_block_interpolated = symbol_block_upsampled
+        return symbol_block_interpolated
 
     def loop_filter(self, timing_error):
         """
@@ -132,25 +127,62 @@ class SCS():
             timing_error = 0.99
         return timing_error
 
+    def argmax_ted(self, symbol_block_interpolated):
+        """
+        ARGMAX timing error detector implementation.
+        REQUIRES CUBIC INTERPOLATION
+        """
+        symbol_block_real_interpolated = np.real(symbol_block_interpolated)
+        on_time_index = self.upsample_rate
+        
+        max_value = np.max(symbol_block_real_interpolated)
+        max_index = np.argmax(symbol_block_real_interpolated)
+
+        min_value = np.abs(np.min(symbol_block_real_interpolated))
+        min_index = np.argmin(symbol_block_real_interpolated)
+
+        if max_value > min_value:
+            arg_index = max_index
+        else:
+            arg_index = min_index
+
+        # if arg_index >= 2 * on_time_index:
+        #     arg_index = on_time_index
+        # elif arg_index <= -2 * on_time_index:
+        #     arg_index = on_time_index
+
+        timing_error = (arg_index - on_time_index) / self.upsample_rate
+        return timing_error
+
     def insert_new_sample(self, complex_early_sample, complex_on_time_sample, complex_late_sample):
-        # sample by sample implementation
-        if self.counter == self.samples_per_symbol-1:
+        """
+        Insert new samples for processing.
+
+        :param complex_early_sample: Complex type. Early sample.
+        :param complex_on_time_sample: Complex type. On-time sample.
+        :param complex_late_sample: Complex type. Late sample.
+        """
+        if self.counter == self.samples_per_symbol - 1:
             symbol_block = np.array([complex_early_sample, complex_on_time_sample, complex_late_sample])
 
-            timing_error = self.early_late_ted()
-            loop_filter_output = self.loop_filter(timing_error)
-
-            symbol_block_interpolated = self.upsample(symbol_block, interpolate=True)
-
-            on_time_index = self.upsample_rate + int(timing_error * self.upsample_rate)
+            if self.mode == "argmax":
+                symbol_block_interpolated = self.interpolate(symbol_block, mode='cubic')
+                timing_error = self.argmax_ted(symbol_block_interpolated)
+                loop_filter_output = self.loop_filter(timing_error)
+            else:
+                symbol_block_interpolated = self.interpolate(symbol_block, mode='linear')
+                timing_error = self.early_late_ted()
+                loop_filter_output = self.loop_filter(timing_error)
+            
+            adjusted_on_time_index = self.upsample_rate + int(loop_filter_output * self.upsample_rate)
 
             self.adjusted_symbol_block = np.array([
-                symbol_block_interpolated[on_time_index - self.upsample_rate],
-                symbol_block_interpolated[on_time_index],
-                symbol_block_interpolated[on_time_index + self.upsample_rate]
+                symbol_block_interpolated[adjusted_on_time_index - self.upsample_rate],
+                symbol_block_interpolated[adjusted_on_time_index],
+                symbol_block_interpolated[adjusted_on_time_index + self.upsample_rate]
             ], dtype=complex)
 
             self.counter = 0
-            self.scs_output_record.append(symbol_block_interpolated[on_time_index])
+            self.scs_output_record.append(symbol_block_interpolated[adjusted_on_time_index])
         else:
             self.counter += 1
