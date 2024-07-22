@@ -3,7 +3,7 @@ from scipy import interpolate as intp
 import matplotlib.pyplot as plt
 
 class SCS:
-    def __init__(self, samples_per_symbol, mode="early-late", loop_bandwidth=None, damping_factor=None, k0=1, kp=1, k1=0, k2=0, upsample_rate=10):
+    def __init__(self, samples_per_symbol, loop_bandwidth=None, damping_factor=None, k0=1, kp=1, k1=0, k2=0, upsample_rate=10):
         '''
         Initialize the SCS (Symbol Clock Synchronization) subsystem class.
 
@@ -17,7 +17,6 @@ class SCS:
         :param upsample_rate: Int type. Upsample rate of timing error correction interpolation.
         '''
         self.samples_per_symbol = samples_per_symbol
-        self.mode = mode
         self.upsample_rate = upsample_rate
 
         self.k2_prev = 0
@@ -52,29 +51,29 @@ class SCS:
         self.k0 = k0
         self.kp = kp
 
-    def get_timing_error_record(self) -> list:
+    def get_timing_error_record(self):
         """
         Get the recorded timing errors.
         
-        :return: List type. Recorded timing errors.
+        :return: Numpy array type. Recorded timing errors.
         """
-        return self.timing_error_record
+        return np.array(self.timing_error_record)
 
-    def get_loop_filter_record(self) -> list:
+    def get_loop_filter_record(self):
         """
         Get the recorded loop filter outputs.
         
-        :return: List type. Recorded loop filter outputs.
+        :return: Numpy array type. Recorded loop filter outputs.
         """
-        return self.loop_filter_record
+        return np.array(self.loop_filter_record)
 
-    def get_scs_output_record(self) -> list:
+    def get_scs_output_record(self):
         """
         Get the recorded SCS outputs.
         
-        :return: List type. Recorded SCS outputs.
+        :return: Numpy array type. Recorded SCS outputs.
         """
-        return self.scs_output_record
+        return np.array(self.scs_output_record)
 
     def interpolate(self, symbol_block, mode='cubic'):
         """
@@ -111,6 +110,7 @@ class SCS:
         k2 = self.k2 * timing_error + self.k2_prev
         output = self.k1 * timing_error + k2
         self.k2_prev = k2
+
         self.loop_filter_record.append(output)
         return output
 
@@ -120,38 +120,9 @@ class SCS:
         
         :return: Float type. The calculated timing error.
         """
-        timing_error = (np.real(self.adjusted_symbol_block[1]) * (np.real(self.adjusted_symbol_block[2]) - np.real(self.adjusted_symbol_block[0])) 
-                        + np.imag(self.adjusted_symbol_block[1]) * (np.imag(self.adjusted_symbol_block[2]) - np.imag(self.adjusted_symbol_block[0])))
+        timing_error = (np.real(self.adjusted_symbol_block[1]) * (np.real(self.adjusted_symbol_block[2]) - np.real(self.adjusted_symbol_block[0])))
+        timing_error = timing_error * (1/self.samples_per_symbol)
         self.timing_error_record.append(timing_error)
-        if timing_error >= 1:
-            timing_error = 0.99
-        return timing_error
-
-    def argmax_ted(self, symbol_block_interpolated):
-        """
-        ARGMAX timing error detector implementation.
-        REQUIRES CUBIC INTERPOLATION
-        """
-        symbol_block_real_interpolated = np.real(symbol_block_interpolated)
-        on_time_index = self.upsample_rate
-        
-        max_value = np.max(symbol_block_real_interpolated)
-        max_index = np.argmax(symbol_block_real_interpolated)
-
-        min_value = np.abs(np.min(symbol_block_real_interpolated))
-        min_index = np.argmin(symbol_block_real_interpolated)
-
-        if max_value > min_value:
-            arg_index = max_index
-        else:
-            arg_index = min_index
-
-        # if arg_index >= 2 * on_time_index:
-        #     arg_index = on_time_index
-        # elif arg_index <= -2 * on_time_index:
-        #     arg_index = on_time_index
-
-        timing_error = (arg_index - on_time_index) / self.upsample_rate
         return timing_error
 
     def insert_new_sample(self, complex_early_sample, complex_on_time_sample, complex_late_sample):
@@ -165,15 +136,10 @@ class SCS:
         if self.counter == self.samples_per_symbol - 1:
             symbol_block = np.array([complex_early_sample, complex_on_time_sample, complex_late_sample])
 
-            if self.mode == "argmax":
-                symbol_block_interpolated = self.interpolate(symbol_block, mode='cubic')
-                timing_error = self.argmax_ted(symbol_block_interpolated)
-                loop_filter_output = self.loop_filter(timing_error)
-            else:
-                symbol_block_interpolated = self.interpolate(symbol_block, mode='linear')
-                timing_error = self.early_late_ted()
-                loop_filter_output = self.loop_filter(timing_error)
-            
+            symbol_block_interpolated = self.interpolate(symbol_block, mode='linear')
+            timing_error = self.early_late_ted()
+            loop_filter_output = self.loop_filter(timing_error)
+        
             adjusted_on_time_index = self.upsample_rate + int(loop_filter_output * self.upsample_rate)
 
             self.adjusted_symbol_block = np.array([
