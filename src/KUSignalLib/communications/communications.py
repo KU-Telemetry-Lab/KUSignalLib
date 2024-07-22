@@ -2,6 +2,7 @@ import math
 import matplotlib.axes
 import numpy as np
 import sys
+from scipy import interpolate as intp
 
 def bin_to_char(x):
     """
@@ -153,3 +154,21 @@ def differential_decoder(x, LUT, allowedError = np.pi/12):
             if abs(phaseDiff-j[0]) < allowedError:
                 output.append(j[1])
     return output
+
+def clock_offset(signal, sample_rate, offset_fraction):
+    """
+    Simulates clock offset due to mismatched synchronization or skew. Input is
+    usually after upsample and match filtering.
+
+    :param signal: List or numpy array type. Input signal with no clock offset.
+    :param sample_rate: Int type. Sample rate of input signal.
+    :param offset_fraction: Float type. Offset fraction to be normalized by sample duration.
+    :return: Numpy array type. Clock offset / shifted version of input signal.
+    """
+    t = np.arange(0, len(signal) / sample_rate, 1 / sample_rate)
+    clock_offset = (1/sample_rate) * offset_fraction
+
+    interpolator = intp.interp1d(t, signal, kind='linear', fill_value='extrapolate')
+    t_shifted = t + clock_offset 
+    x_shifted = interpolator(t_shifted)
+    return x_shifted

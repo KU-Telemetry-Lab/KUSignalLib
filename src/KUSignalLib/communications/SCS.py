@@ -150,5 +150,7 @@ class SCS:
 
             self.counter = 0
             self.scs_output_record.append(symbol_block_interpolated[adjusted_on_time_index])
+            return symbol_block_interpolated[adjusted_on_time_index]
         else:
             self.counter += 1
+            return None
