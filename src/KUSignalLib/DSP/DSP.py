@@ -282,7 +282,7 @@ def cross_correlation(signal, sequence):
 
     :param signal: List or numpy array. Input signal.
     :param sequence: List or numpy array. Input sequence should be the sequence 
-     your searching for, shold be shoter then signal.
+    you're searching for, shold be shoter then signal.
 
     :return: Numpy array. Cross-correlation output.
     """
@@ -291,3 +291,32 @@ def cross_correlation(signal, sequence):
     for i in range(len(signal)-len(sequence)-1):
         output.append(np.dot(signal[i:i + len(sequence)], sequence))
     return output
+
+def cordic(theta_desired, iterations=8):
+    """
+    Compute the cordic rotational approximation of the cosine and sine of the provided angle (radians).
+
+    :param theta_desired: Int or float type. Desired angle of calculation (in radians).
+    :param iterations: Int type. Number of iterations taken during the approximation (determines precision).
+
+    :return: Float type. Cosine and sine approximations of theta_desired using cordic algorithm.
+    """
+    theta_table = [math.atan2(1, 2**i) for i in range(iterations)]
+    K_n = 1.0
+    for i in range(iterations):
+        K_n *= 1 / np.sqrt(1 + 2 ** (-2 * i))
+
+    theta_approximated = 0.0
+    x = 1.0
+    y = 0.0
+    P2i = 1
+    for arc_tangent in theta_table:
+        sigma = +1 if theta_approximated < theta_desired else -1
+        theta_approximated += sigma * arc_tangent
+        x, y = x - sigma * y * P2i, sigma * P2i * x + y
+        P2i /= 2
+
+    return x * K_n, y * K_n
+
+
+    
