@@ -1,7 +1,9 @@
 from math import atan2, sqrt, sin, cos, radians
 
-ITERS = 16
-theta_table = [atan2(1, 2**i) for i in range(ITERS)]
+def make_lookup(ITERS):
+    theta_table = [atan2(1, 2**i) for i in range(ITERS)]
+    print(theta_table)
+    return theta_table
 
 def compute_K(n):
     """
@@ -19,9 +21,10 @@ def CORDIC(alpha, n):
     x = 1.0
     y = 0.0
     P2i = 1  # This will be 2**(-i) in the loop below
-    for arc_tangent in theta_table:
+    for arc_tangent in make_lookup(n):
         sigma = +1 if theta < alpha else -1
         theta += sigma * arc_tangent
         x, y = x - sigma * y * P2i, sigma * P2i * x + y
         P2i /= 2
+        print(theta)
     return x * K_n, y * K_n
