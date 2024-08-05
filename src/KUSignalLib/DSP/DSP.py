@@ -243,7 +243,7 @@ def modulate_by_exponential(x, f_c, f_s, phase=0):
         y.append(value * modulation_factor)
     return np.array(y)
 
-def plot_complex_points(data, referencePoints = None, limit = None, Show = True):
+def plot_complex_points(data, referencePoints = None, limit = None):
     """
     Plot complex points on a 2D plane.
 
@@ -259,6 +259,7 @@ def plot_complex_points(data, referencePoints = None, limit = None, Show = True)
     plt.grid(True)
     plt.xlim(-limit, limit) 
     plt.ylim(limit, -limit) 
+    plt.show()
 
 def convolve(x, h, mode='full'):
     """
