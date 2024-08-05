@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = [
   { name="Luke Staudacher William Powers"},
 ]
-description = "To provide advanced DSP, Communication, and Radar functionality"
+description = "To provide advanced DSP and Communication functionality, Project advised by Dr. Erik Perrins, University of Kansas"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [

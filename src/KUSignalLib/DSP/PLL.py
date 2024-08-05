@@ -100,6 +100,8 @@ class PLL():
 
     def DDS(self, n, v, k0=None, w0=None, fs=None):
         """
+        Direct Digital Synthesizer (DDS) implementation.
+
         :param n: Int type. The current sample index.
         :param v: Float type. The output of the loop filter.
         :param k0: Float type. DDS gain.

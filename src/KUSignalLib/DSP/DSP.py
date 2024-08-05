@@ -252,7 +252,9 @@ def plot_complex_points(data, referencePoints = None):
     plt.plot([point.real for point in data], [point.imag for point in data], 'ro')
     if referencePoints is not None:
         plt.plot([point.real for point in referencePoints], [point.imag for point in referencePoints], 'b+')
-    
+    plt.xlabel('Real')
+    plt.ylabel('Imaginary')
+    plt.grid(True)
     plt.show()
 
 def convolve(x, h, mode='full'):
