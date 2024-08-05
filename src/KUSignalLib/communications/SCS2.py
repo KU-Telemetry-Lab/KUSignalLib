@@ -62,7 +62,7 @@ class SCS2:
         v2 = -d1next + self.delay1[row][0] + self.delay1[row][1] - self.delay1[row][2]
         v1 = d1next - self.delay1[row][0] + self.delay2[row][0] + self.delay1[row][1] + self.delay1[row][2]
         v0 = self.delay2[row][1]
-        output = -(((v2*self.delta_e)+v1)*self.delta_e + v0)
+        output = (((v2*self.delta_e)+v1)*self.delta_e + v0)
         self.delay1[row].pop()
         self.delay2[row].pop()
         self.delay1[row].append(d1next)
