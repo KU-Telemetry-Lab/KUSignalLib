@@ -43,7 +43,7 @@ class PLL():
         Compute the loop filter gains based on the loop bandwidth and damping factor.
         """
         theta_n = (loopBandwidth*T/sampsPerSym)/(dampingFactor + 1/(4*dampingFactor))
-        factor = (-4*theta_n)/(1+2*dampingFactor*theta_n+theta_n**2)
+        factor = (4*theta_n)/(1+2*dampingFactor*theta_n+theta_n**2)
         self.K1 = dampingFactor * factor/kp
         self.K2 = theta_n * factor/kp
         self.K0 = k0
