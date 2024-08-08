@@ -3,15 +3,15 @@ import numpy as np
 
 
 class SCS2:
-    def __init__(self, loop_bandwidth = None, damping_factor = None, kp=1, k1=0, k2=0, fs=1, sampsPerSym=1 , gain = 1):
+    def __init__(self, loop_bandwidth = None, damping_factor = None, kp=1, k1=0, k2=0, fs=1, sampsPerSym=1 , gain = 1, strobe_start = False):
         # where index 0 is the real and index 1 is the imaginary
-        self.delay2 = [[0, 0], [0,0]]
-        self.delay1 = [[0, 0, 0], [0,0,0]]
-        self.interpolatedPoints = [[0,0,0], [0,0,0]]
+        self.delay1 = np.zeros((2, 3))
+        self.delay2 = np.zeros((2, 2))
+        self.interpolatedPoints = np.zeros((2, 3))
         self.delta_e = 0
         self.delta_e_prev = 0
         self.LFK2prev = 0
-        self.strobe = False
+        self.strobe = strobe_start
         self.gain = gain
         if loop_bandwidth == None and damping_factor == None:
             self.Kp = kp
@@ -34,39 +34,68 @@ class SCS2:
         self.K2 = theta_n * factor/kp
         self.Kp = kp
 
-    def insert_new_sample(self, input):
-        interpR = self.farrow_interpolator(np.real(input), row = 0)# give the interpolated point for n-2 sample
-        interpI = self.farrow_interpolator(np.imag(input), row = 1)
+    def insert_new_sample(self, input, parabolic = True):
+        interpI = 0
+        interpR = 0
+        if parabolic:
+            interpR = self.farrow_interpolator_parabolic(np.real(input), row = 0)# give the interpolated point for n-2 sample
+            interpI = self.farrow_interpolator_parabolic(np.imag(input), row = 1)
+        else:
+            interpR = self.farrow_interpolator_cubic(np.real(input), row = 0)
+            interpI = self.farrow_interpolator_cubic(np.imag(input), row = 1)
+        
         error = self.ELTED()
         filtered_error = self.loop_filter(error)
         
         self.strobe = not self.strobe #mod 1 counter
         if self.strobe:
             self.delta_e = self.delta_e_prev
-        print(self.delta_e, error)
+        # print(self.delta_e, error)
         self.delta_e_prev = filtered_error*self.gain
-        self.interpolatedPoints[0].pop()
-        self.interpolatedPoints[0].append(interpR)
-        self.interpolatedPoints[1].pop()
-        self.interpolatedPoints[1].append(interpI)
+        self.interpolatedPoints[0] = np.roll(self.interpolatedPoints[0], -1)
+        self.interpolatedPoints[0][-1] = interpR
+        self.interpolatedPoints[1] = np.roll(self.interpolatedPoints[1], -1)
+        self.interpolatedPoints[1][-1] = interpI
         return np.complex128(interpR, interpI)
 
         
 
-    def farrow_interpolator(self, input, row = 0):
+    def farrow_interpolator_parabolic(self, input, row = 0):
         tmp = self.delta_e
-        # self.delta_e = 0
-        
+        # self.delta_e = 0  #find loop gain
+    
         d1next = -0.5*input
         d2next = input
-        v2 = -d1next + self.delay1[row][0] + self.delay1[row][1] - self.delay1[row][2]
-        v1 = d1next - self.delay1[row][0] + self.delay2[row][0] + self.delay1[row][1] + self.delay1[row][2]
-        v0 = self.delay2[row][1]
-        output = 1.2* (((v2*self.delta_e)+v1)*self.delta_e + v0)
-        self.delay1[row].pop()
-        self.delay2[row].pop()
-        self.delay1[row].append(d1next)
-        self.delay2[row].append(d2next)
+    
+        v2 = -d1next + self.delay1[row][2] + self.delay1[row][1] - self.delay1[row][0]
+        v1 = d1next - self.delay1[row][2] + self.delay2[row][1] + self.delay1[row][1] + self.delay1[row][0]
+        v0 = self.delay2[row][0]
+        output = (((v2*self.delta_e)+v1)*self.delta_e + v0)
+
+        self.delay1[row] = np.roll(self.delay1[row], -1)
+        self.delay2[row] = np.roll(self.delay2[row], -1)
+        self.delay1[row][-1] = d1next
+        self.delay2[row][-1] = d2next
+
+        self.delta_e = tmp
+        
+        return output
+    
+    def farrow_interpolator_cubic(self, input, row = 0):
+        tmp = self.delta_e
+        # self.delta_e = 0  #find loop gain
+        d1next = input
+        d2next = input
+        v3 =  (1/6)*d1next - (1/2)*self.delay1[row][2] + (1/2)*self.delay1[row][1] - (1/6)*self.delay1[row][0]
+        v2 =                 (1/2)*self.delay1[row][2] -       self.delay1[row][1] + (1/2)*self.delay1[row][0]
+        v1 = (-1/6)*d1next +       self.delay1[row][2] - (1/2)*self.delay1[row][1] - (1/3)*self.delay1[row][0]
+        v0 = self.delay2[row][0]
+        output = ((v3*self.delta_e + v2)*self.delta_e + v1)*self.delta_e + v0
+
+        self.delay1[row] = np.roll(self.delay1[row], -1)
+        self.delay2[row] = np.roll(self.delay2[row], -1)
+        self.delay1[row][-1] = d1next
+        self.delay2[row][-1] = d2next
 
         self.delta_e = tmp
         
