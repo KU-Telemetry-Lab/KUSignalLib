@@ -21,7 +21,6 @@ class SCS2:
             self.K2 = k2
         else:
             self.compute_loop_constants(loop_bandwidth, damping_factor, 1/fs, sampsPerSym, kp)
-            print(self.K1, self.K2, self.Kp)
 
     def compute_loop_constants(self, loopBandwidth, dampingFactor, T, sampsPerSym, kp):
         """
