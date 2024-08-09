@@ -257,8 +257,9 @@ def plot_complex_points(data, referencePoints = None, limit = None, show = True)
     plt.xlabel('Real')
     plt.ylabel('Imaginary')
     plt.grid(True)
-    plt.xlim(-limit, limit) 
-    plt.ylim(limit, -limit) 
+    if not (limit == 'max'):
+        plt.xlim(-limit, limit) 
+        plt.ylim(limit, -limit) 
     if show:
         plt.show()
 
