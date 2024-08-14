@@ -249,6 +249,7 @@ def plot_complex_points(data, referencePoints = None, limit = None, show = True)
 
     :param data: List or numpy array. Complex points to plot.
     """
+    plt.figure(figsize=(10, 9))
     if limit is None:
         limit = 1.5*max([abs(point.real) for point in referencePoints])
     plt.plot([point.real for point in data], [point.imag for point in data], 'ro')
